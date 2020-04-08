@@ -1,5 +1,6 @@
 from setuptools import setup, find_packages
 from os import path
+import __version__
 
 here = path.abspath(path.dirname(__file__))
 
@@ -8,7 +9,7 @@ with open(path.join(here, 'README.md'), encoding='utf-8') as f:
 
 setup(
     name='SPmodelling',
-    version='0.0.0a',
+    version=__version__.__version__,
 
     # This is a one-line description or tagline of what your project does. This
     # corresponds to the "Summary" metadata field:
