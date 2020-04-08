@@ -2,7 +2,7 @@ from neo4j import GraphDatabase
 from matplotlib.pylab import *
 from abc import ABC, abstractmethod
 import specification
-import Interface
+from SPmodelling import Interface
 
 
 class Monitor(ABC):

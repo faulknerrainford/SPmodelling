@@ -1,9 +1,5 @@
-import Reset
-import Monitor
-import Population
+from SPmodelling import Monitor, Reset, Balancer, Flow, Population
 # import Structure
-import Balancer
-import Flow
 import concurrent.futures
 import sys
 
