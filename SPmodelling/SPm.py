@@ -5,6 +5,18 @@ import sys
 
 
 def main(runs, length, population):
+    """
+    This function takes the number of runs required, the time-step length of each run and the size of population and
+    runs a SPmodel based on the local specification file. It saves all output to a run name as defined by the parameters
+    given and the specification. This uses concurrent.futures to run the Monitor, Population, Structure, Balancer and
+    Flow concurrently.
+
+    :param runs: Number of models runs required
+    :param length: Time-step length of each run
+    :param population: Size of initial and maintained population for each run
+
+    :return: None
+    """
     # TODO: Add flags to turn structure and balancer on and off in the system
     for i in range(runs):
         Reset.main(i, population, length)
