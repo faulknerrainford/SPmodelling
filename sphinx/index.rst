@@ -5,11 +5,13 @@
 
 Socio-Physical Modelling
 ====================================================
+The Socio-Physical Modelling framework.
 
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
 
+   summary
    code
 
 
