@@ -1,1 +1,1 @@
-from SPmodelling.Agent import MotiveAgent, CommunicativeAgent
+from SPmodelling.Agent import MobileAgent, CommunicativeAgent
