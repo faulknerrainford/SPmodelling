@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 
 
-class Agent(ABC):
+class MotiveAgent(ABC):
 
     @abstractmethod
     def __init__(self, agentid, params=None, nuid="id"):
@@ -46,3 +46,14 @@ class Agent(ABC):
             self.payment(tx, intf)
             self.learn(tx, intf, self.choice)
             return new
+
+
+class CommunicativeAgent(ABC):
+
+    @abstractmethod
+    def __init__(self, agentid, params=None, nuid="id"):
+        # TODO: write social agent functionality and handler like flow
+        self.id = agentid
+        self.view = None
+        self.params = params
+        self.nuid = nuid

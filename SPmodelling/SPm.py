@@ -2,7 +2,8 @@ from SPmodelling import Monitor, Reset, Balancer, Flow, Population
 # import Structure
 import concurrent.futures
 import sys
-
+# TODO: Add flags for the modules to be run. eg ['F','B','P','S','I','M'] for flow, balance, population, structure and
+#  infomation default would be ['F','M'] which gives a very basic system with a monitor.
 
 def main(runs, length, population):
     """
