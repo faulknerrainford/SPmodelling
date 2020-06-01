@@ -59,14 +59,14 @@ class CommunicativeAgent(ABC):
         self.nuid = nuid
 
     def socialise(self, tx, intf):
-        self.perception(tx, intf)
+        self.view(tx, intf)
         self.update(tx, intf)
         self.talk(tx, intf)
         self.listen(tx, intf)
         self.react(tx, intf)
 
     @abstractmethod
-    def perception(self, tx, intf):
+    def view(self, tx, intf):
         return None
 
     @abstractmethod
