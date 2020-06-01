@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 
 
-class MotiveAgent(ABC):
+class MobileAgent(ABC):
 
     @abstractmethod
     def __init__(self, agentid, params=None, nuid="id"):
