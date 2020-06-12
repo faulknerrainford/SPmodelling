@@ -1,5 +1,3 @@
-
-
 class Interface:
 
     def __init__(self, node_vector_length=0, edge_vector_length=0):
@@ -15,8 +13,56 @@ class Interface:
                          "RETURN n, r, a", agent=agent).values()
         if results:
             node = results[0][0]
-            edges = [edge[1]for edge in results]
+            edges = [edge[1] for edge in results]
             results = [node] + edges
+        return results
+
+    @staticmethod
+    def locateagent(tx, agent):
+        results = tx.run("MATCH (m:Agent)-[s:LOCATED]->(n:Node) "
+                         "WHERE m.id={agent} "
+                         "RETURN n", agent=agent).values()
+        return results[0]
+
+    @staticmethod
+    # TODO: test
+    def updatecontactedge(tx, node_a, node_b, attribute, value, label_a=None, label_b=None):
+        query = "MATCH (a"
+        if label_a:
+            query = query + ":" + label_a
+        query = query + ")-[r:SOCIAL]->(b"
+        if label_b:
+            query = query + ":" + label_b
+        query = query + ") WHERE a.id={node_a}, b.id={node_b} SET r."+attribute+"={value} "
+        tx.run(query, node_a=node_a, node_b=node_b, value=value)
+
+    @staticmethod
+    #TODO: test
+    def deletecontact(tx, node_a, node_b, label_a, label_b):
+        tx.run("MATCH (a:"+label_a+")-[r:SOCIAL]->(b:"+label_b+") "
+               "WHERE a.id={node_a}, b.id={node_b} "
+               "DELETE r", node_b=node_b, node_a=node_a)
+
+    @staticmethod
+    # TODO: Test
+    def agentcontacts(tx, node_a, label, contact_label=None):
+        if contact_label:
+            contact_label = ": "+contact_label
+        else:
+            contact_label = ": "+label
+        results = tx.run("MATCH (a:"+label+")-[r:SOCIAL]->(b"+contact_label+") "
+                         "WHERE a.id={node_a} "
+                         "RETURN r", node_a=node_a).values()
+        return results
+
+    @staticmethod
+    def colocated(tx, agent):
+        results = tx.run("MATCH (m:Agent)-[s:LOCATED]->(n:Node) "
+                         "WITH n "
+                         "WHERE m.id={agent} "
+                         "MATCH (a:Agent)-[s:LOCATED]->(n:Node) "
+                         "RETURN a", agent=agent).values()
+        results = [res[0] for res in results]
         return results
 
     @staticmethod
@@ -26,6 +72,9 @@ class Interface:
         if label == "Agent":
             query = "MATCH (n:Agent) ""WHERE n." + uid + " = {id} ""RETURN n"
             results = tx.run(query, id=nodeid, lab=label).values()
+        elif label:
+            query = "MATCH (n:"+label+") ""WHERE n." + uid + " = {id} ""RETURN n"
+            results = tx.run(query, id=nodeid).values()
         else:
             query = "MATCH (n) ""WHERE n." + uid + " = {id} ""RETURN n"
             results = tx.run(query, id=nodeid).values()
@@ -60,6 +109,19 @@ class Interface:
         return tx.run(query).value()[0]
 
     @staticmethod
+    def shortestpath(tx, node_a, node_b, node_label, edge_label, directed="False"):
+        if directed:
+            directionality = 'OUTGOING'
+        else:
+            directionality = 'BOTH'
+        node_a = Interface().getnode(tx, node_a, 'Agent', 'id')
+        node_b = Interface().getnode(tx, node_b, 'Agent', 'id')
+        sp = tx.run("CALL algo.shortestPath({nodeA}, {nodeB}, nodeQuery:{nodelabel}, "
+                    "relationshipQuery:{edgelabel}, direction: {directionality}) "
+                    "YIELD totalCost", nodeA=node_a, nodeB=node_b, nodelabel=node_label,
+                    edgelabel=edge_label, directionality=directionality).values()[0]
+
+    @staticmethod
     def getnodevector(node):
         return dict(list(tuple(node.items())))
 
@@ -73,15 +135,17 @@ class Interface:
             uid = "id"
         start = edge.start_node
         end = edge.end_node
-        query = "MATCH (a:Node)-[r:REACHES]->(b:Node) ""WHERE a." + uid + "={start} AND b." + uid +\
+        query = "MATCH (a:Node)-[r:REACHES]->(b:Node) ""WHERE a." + uid + "={start} AND b." + uid + \
                 "={end} ""SET r." + prop + "={val}"
         tx.run(query, start=start[uid], end=end[uid], val=value)
 
     @staticmethod
-    def updatenode(tx, node, prop, value, uid=None):
+    def updatenode(tx, node, prop, value, uid=None, label=None):
         if not uid:
             uid = "id"
-        query = "MATCH (a:Node) ""WHERE a." + uid + "={node} ""SET a." + prop + "={value}"
+        if not label:
+            label = "Node"
+        query = "MATCH (a:" + label + ") ""WHERE a." + uid + "={node} ""SET a." + prop + "={value}"
         tx.run(query, node=node, value=value)
 
     @staticmethod
@@ -102,7 +166,7 @@ class Interface:
     def addagent(tx, node, label, params, uid=None):
         if not uid:
             uid = "id"
-        query = "MATCH (n:"+label+") ""WITH n ""ORDER BY n.id DESC ""RETURN n.id"
+        query = "MATCH (n: " + label + ") ""WITH n ""ORDER BY n.id DESC ""RETURN n.id"
         highest_id = tx.run(query).values()
         if highest_id:
             agent_id = highest_id[0][0] + 1
@@ -113,6 +177,12 @@ class Interface:
             query = query + ", " + param + ":" + str(params[param])
         query = query + "})-[r:LOCATED]->(n)"
         tx.run("MATCH (n:Node) ""WHERE n." + uid + "= '" + node[uid] + "' " + query)
+
+    @staticmethod
+    def createedge(tx, node_a, node_b, label_a, label_b, edge_label, parameters):
+        tx.run("CREATE (a:{label_a})-[n:{edge_label}, {{parameters}}]->(b:{label_b}) "
+               "WHERE a.id={node_a}, b.id={node_b}", node_a=node_a, node_b=node_b, label_a=label_a, label_b=label_b,
+               edge_label=edge_label, parameters=parameters)
 
         # TODO: Integrate toy functionality back in by updating toy files to use new system
 

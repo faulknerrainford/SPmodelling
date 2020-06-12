@@ -7,7 +7,7 @@ def main(rl, ps):
     uri = "bolt://localhost:7687"
     interface = Interface()
     clock = 0
-    agent = specification.Agents.Agent(None)
+    agent = specification.Agents(None)
     while clock < rl:
         dri = GraphDatabase.driver(specification.database_uri, auth=specification.Population_auth,
                                    max_connection_lifetime=2000)

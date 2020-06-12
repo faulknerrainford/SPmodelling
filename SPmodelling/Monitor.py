@@ -38,7 +38,7 @@ class Monitor(ABC):
 
 
 def main(rl):
-    monitor = specification.Monitor.Monitor()
+    monitor = specification.Monitor()
     clock = 0
     interface = Interface.Interface()
     while clock < rl:

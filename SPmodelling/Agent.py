@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 
 
-class Agent(ABC):
+class MobileAgent(ABC):
 
     @abstractmethod
     def __init__(self, agentid, params=None, nuid="id"):
@@ -35,14 +35,52 @@ class Agent(ABC):
     def move(self, tx, intf, perc):
         self.choice = self.choose(tx, intf, perc)
         if self.choice:
-            # Move node based on choice using tx
-            tx.run("MATCH (n:Agent)-[r:LOCATED]->() "
-                   "WHERE n.id = {id} "
-                   "DELETE r", id=self.id)
-            new = self.choice.end_node[self.nuid]
-            tx.run("MATCH (n:Agent), (a:Node) "
-                   "WHERE n.id={id} AND a." + self.nuid + "={new} "
-                                                          "CREATE (n)-[r:LOCATED]->(a)", id=self.id, new=new)
-            self.payment(tx, intf)
-            self.learn(tx, intf, self.choice)
-            return new
+            if self.payment(tx, intf):
+                # Move node based on choice using tx
+                tx.run("MATCH (n:Agent)-[r:LOCATED]->() "
+                       "WHERE n.id = {id} "
+                       "DELETE r", id=self.id)
+                new = self.choice.end_node[self.nuid]
+                tx.run("MATCH (n:Agent), (a:Node) "
+                       "WHERE n.id={id} AND a." + self.nuid + "={new} "
+                                                              "CREATE (n)-[r:LOCATED]->(a)", id=self.id, new=new)
+                self.learn(tx, intf, self.choice)
+                return new
+
+
+class CommunicativeAgent(ABC):
+
+    @abstractmethod
+    def __init__(self, agentid, params=None, nuid="id"):
+        # TODO: write social agent functionality and handler like flow
+        self.id = agentid
+        self.view = None
+        self.params = params
+        self.nuid = nuid
+
+    def socialise(self, tx, intf):
+        self.view(tx, intf)
+        self.update(tx, intf)
+        self.talk(tx, intf)
+        self.listen(tx, intf)
+        self.react(tx, intf)
+
+    @abstractmethod
+    def view(self, tx, intf):
+        return None
+
+    @abstractmethod
+    def update(self, tx, intf):
+        return None
+
+    @abstractmethod
+    def talk(self, tx, intf):
+        return None
+
+    @abstractmethod
+    def listen(self, tx, intf):
+        return None
+
+    @abstractmethod
+    def react(self, tx, intf):
+        return None
