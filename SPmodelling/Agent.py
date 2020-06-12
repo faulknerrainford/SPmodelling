@@ -35,17 +35,17 @@ class MobileAgent(ABC):
     def move(self, tx, intf, perc):
         self.choice = self.choose(tx, intf, perc)
         if self.choice:
-            # Move node based on choice using tx
-            tx.run("MATCH (n:Agent)-[r:LOCATED]->() "
-                   "WHERE n.id = {id} "
-                   "DELETE r", id=self.id)
-            new = self.choice.end_node[self.nuid]
-            tx.run("MATCH (n:Agent), (a:Node) "
-                   "WHERE n.id={id} AND a." + self.nuid + "={new} "
-                                                          "CREATE (n)-[r:LOCATED]->(a)", id=self.id, new=new)
-            self.payment(tx, intf)
-            self.learn(tx, intf, self.choice)
-            return new
+            if self.payment(tx, intf):
+                # Move node based on choice using tx
+                tx.run("MATCH (n:Agent)-[r:LOCATED]->() "
+                       "WHERE n.id = {id} "
+                       "DELETE r", id=self.id)
+                new = self.choice.end_node[self.nuid]
+                tx.run("MATCH (n:Agent), (a:Node) "
+                       "WHERE n.id={id} AND a." + self.nuid + "={new} "
+                                                              "CREATE (n)-[r:LOCATED]->(a)", id=self.id, new=new)
+                self.learn(tx, intf, self.choice)
+                return new
 
 
 class CommunicativeAgent(ABC):
