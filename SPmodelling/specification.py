@@ -1,1 +1,0 @@
-# This will be template for specification files eventually
