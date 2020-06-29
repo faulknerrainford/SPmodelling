@@ -1,6 +1,6 @@
 from neo4j import GraphDatabase
 from SPmodelling.Interface import Interface
-import SPmodelling.specification as specification
+import specification
 
 
 def main(rl, rn):
@@ -19,5 +19,6 @@ def main(rl, rn):
                 ag.socialise(tx, intf)
             clock = intf.gettime(tx)
             print("T: " + clock.__str__())
+            tx.close()
     dri.close()
     print("Social closed")

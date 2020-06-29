@@ -1,8 +1,7 @@
 #!/usr/bin/env python
 from abc import ABC, abstractmethod
 from neo4j import GraphDatabase
-import specification
-
+# import specification.specname as specname
 
 class Reset(ABC):
 
@@ -10,7 +9,7 @@ class Reset(ABC):
         self.reset_name = reset_tag
 
     def set_output(self, tx, run_number, pop_size, run_length):
-        print(type(specification.specname))
+        import specification
         tag = specification.specname + "_" + self.reset_name + "_" + str(pop_size) + "_" + str(run_length) + "_" + str(
             run_number)
         tx.run("CREATE (a:Tag {tag:{tag}})", tag=tag)
@@ -45,7 +44,9 @@ class Reset(ABC):
 
 
 def main(rn, ps, rl):
+    import specification
     uri = "bolt://localhost:7687"
+    print("running rest")
     dri = GraphDatabase.driver(specification.database_uri, auth=specification.Reset_auth, max_connection_lifetime=2000)
     print("In code")
     with dri.session() as ses:

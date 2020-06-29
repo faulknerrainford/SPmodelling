@@ -22,10 +22,9 @@ class Interface:
         results = tx.run("MATCH (m:Agent)-[s:LOCATED]->(n:Node) "
                          "WHERE m.id={agent} "
                          "RETURN n", agent=agent).values()
-        return results[0]
+        return results[0][0]
 
     @staticmethod
-    # TODO: test
     def updatecontactedge(tx, node_a, node_b, attribute, value, label_a=None, label_b=None):
         query = "MATCH (a"
         if label_a:
@@ -33,27 +32,28 @@ class Interface:
         query = query + ")-[r:SOCIAL]->(b"
         if label_b:
             query = query + ":" + label_b
-        query = query + ") WHERE a.id={node_a}, b.id={node_b} SET r."+attribute+"={value} "
+        query = query + ") WHERE a.id={node_a} and b.id={node_b} SET r." + attribute + "={value} "
         tx.run(query, node_a=node_a, node_b=node_b, value=value)
 
     @staticmethod
-    #TODO: test
-    def deletecontact(tx, node_a, node_b, label_a, label_b):
-        tx.run("MATCH (a:"+label_a+")-[r:SOCIAL]->(b:"+label_b+") "
-               "WHERE a.id={node_a}, b.id={node_b} "
-               "DELETE r", node_b=node_b, node_a=node_a)
+    def deletecontact(tx, node_a, node_b, label_a, label_b, contact_type='SOCIAL'):
+        query = "MATCH (a:" + label_a + ")-[r"
+        if contact_type:
+            query = query + ":" + contact_type
+        query = query + "]->(b:" + label_b + ") WHERE a.id=" + str(node_a) + " and b.id=" + str(node_b) + " DELETE r RETURN COUNT(r)"
+        print(query)
+        return tx.run(query)
 
     @staticmethod
-    # TODO: Test
     def agentcontacts(tx, node_a, label, contact_label=None):
         if contact_label:
-            contact_label = ": "+contact_label
+            contact_label = ": " + contact_label
         else:
-            contact_label = ": "+label
-        results = tx.run("MATCH (a:"+label+")-[r:SOCIAL]->(b"+contact_label+") "
-                         "WHERE a.id={node_a} "
-                         "RETURN r", node_a=node_a).values()
-        return results
+            contact_label = ": " + label
+        results = tx.run("MATCH (a:" + label + ")-[r:SOCIAL]->(b" + contact_label + ") "
+                                                                                    "WHERE a.id={node_a} "
+                                                                                    "RETURN r, b", node_a=node_a).values()
+        return [res[0] for res in results]
 
     @staticmethod
     def colocated(tx, agent):
@@ -73,7 +73,7 @@ class Interface:
             query = "MATCH (n:Agent) ""WHERE n." + uid + " = {id} ""RETURN n"
             results = tx.run(query, id=nodeid, lab=label).values()
         elif label:
-            query = "MATCH (n:"+label+") ""WHERE n." + uid + " = {id} ""RETURN n"
+            query = "MATCH (n:" + label + ") ""WHERE n." + uid + " = {id} ""RETURN n"
             results = tx.run(query, id=nodeid).values()
         else:
             query = "MATCH (n) ""WHERE n." + uid + " = {id} ""RETURN n"
@@ -93,10 +93,11 @@ class Interface:
         if not uid:
             uid = "id"
         if label:
-            query = "MATCH (a:" + label + ") ""WHERE a." + uid + "={node} ""RETURN a." + value
+            query = "MATCH (a:" + label + ") ""WHERE a." + uid + "=" + str(node) + " ""RETURN a." + value
         else:
-            query = "MATCH (a:Node) ""WHERE a." + uid + "={node} ""RETURN a." + value
-        return tx.run(query, node=node).value()[0]
+            query = "MATCH (a:Node) ""WHERE a." + uid + "=" + str(node) + " ""RETURN a." + value
+        results = tx.run(query, node=node).value()
+        return results[0]
 
     @staticmethod
     def getrunname(tx):
@@ -109,17 +110,22 @@ class Interface:
         return tx.run(query).value()[0]
 
     @staticmethod
-    def shortestpath(tx, node_a, node_b, node_label, edge_label, directed="False"):
+    def tick(tx):
+        time = 1 + Interface().gettime(tx)
+        query = "MATCH (a:Clock) ""SET a.time={time} "
+        return tx.run(query, time=time)
+
+    @staticmethod
+    def shortestpath(tx, node_a, node_b, node_label, edge_label, directed=False):
         if directed:
             directionality = 'OUTGOING'
         else:
             directionality = 'BOTH'
-        node_a = Interface().getnode(tx, node_a, 'Agent', 'id')
-        node_b = Interface().getnode(tx, node_b, 'Agent', 'id')
-        sp = tx.run("CALL algo.shortestPath({nodeA}, {nodeB}, nodeQuery:{nodelabel}, "
-                    "relationshipQuery:{edgelabel}, direction: {directionality}) "
-                    "YIELD totalCost", nodeA=node_a, nodeB=node_b, nodelabel=node_label,
-                    edgelabel=edge_label, directionality=directionality).values()[0]
+        query = "MATCH (a) WHERE a.id=" + str(node_a) + " WITH a MATCH (b) WHERE b.id=" + str(node_b) + " WITH a, b "
+        query = query + "CALL algo.shortestPath(a, b,null, {relationshipQuery:'" + edge_label
+        query = query + "', direction: '" + directionality + "'}) YIELD totalCost RETURN totalCost"
+        sp = tx.run(query).values()[0]
+        return sp[0]
 
     @staticmethod
     def getnodevector(node):
@@ -179,10 +185,16 @@ class Interface:
         tx.run("MATCH (n:Node) ""WHERE n." + uid + "= '" + node[uid] + "' " + query)
 
     @staticmethod
-    def createedge(tx, node_a, node_b, label_a, label_b, edge_label, parameters):
-        tx.run("CREATE (a:{label_a})-[n:{edge_label}, {{parameters}}]->(b:{label_b}) "
-               "WHERE a.id={node_a}, b.id={node_b}", node_a=node_a, node_b=node_b, label_a=label_a, label_b=label_b,
-               edge_label=edge_label, parameters=parameters)
+    def createedge(tx, node_a, node_b, label_a, label_b, edge_label, parameters=None):
+        query = "MATCH (a:" + label_a + ") WHERE a.id=" + str(node_a) + " WITH a MATCH (b:" + label_b + ") " \
+                                                                  "WHERE b.id=" + str(node_b) + " " \
+                                                                  "WITH a, b " \
+                                                                  "CREATE (a)-[n:" + edge_label
+        if parameters:
+            query = query + " {" + str(parameters) + "}"
+        query = query + "]->(b) "
+        print(query)
+        tx.run(query)
 
         # TODO: Integrate toy functionality back in by updating toy files to use new system
 
