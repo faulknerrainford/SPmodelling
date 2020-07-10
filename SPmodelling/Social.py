@@ -1,5 +1,5 @@
 from neo4j import GraphDatabase
-import SPmodelling.Interface as intf
+# import SPmodelling.Interface as intf
 import specification
 
 

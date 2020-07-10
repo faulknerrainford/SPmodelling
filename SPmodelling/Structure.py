@@ -1,7 +1,7 @@
 from neo4j import GraphDatabase
 import specification
 from abc import abstractmethod, ABC
-import SPmodelling.Interface as intf
+# import SPmodelling.Interface as intf
 
 
 class Structure(ABC):
