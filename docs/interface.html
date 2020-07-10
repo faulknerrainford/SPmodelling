@@ -1,0 +1,442 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Interface &#8212; Socio-Physical Modelling 0.0.1 documentation</title>
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/language_data.js"></script>
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="SPm run script" href="code.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="code.html" title="SPm run script"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Socio-Physical Modelling 0.0.1 documentation</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="module-Interface">
+<span id="interface"></span><h1>Interface<a class="headerlink" href="#module-Interface" title="Permalink to this headline">¶</a></h1>
+<dl class="py function">
+<dt id="Interface.addagent">
+<code class="sig-prename descclassname">Interface.</code><code class="sig-name descname">addagent</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">tx</span></em>, <em class="sig-param"><span class="n">node</span></em>, <em class="sig-param"><span class="n">label</span></em>, <em class="sig-param"><span class="n">params</span></em>, <em class="sig-param"><span class="n">uid</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Interface.addagent" title="Permalink to this definition">¶</a></dt>
+<dd><p>Insert a new agent into the system</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tx</strong> – neo4j write transaction</p></li>
+<li><p><strong>node</strong> – node to locate agent at</p></li>
+<li><p><strong>label</strong> – label of node</p></li>
+<li><p><strong>params</strong> – list of parameters of agent</p></li>
+<li><p><strong>uid</strong> – type of id used by node</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="Interface.agentcontacts">
+<code class="sig-prename descclassname">Interface.</code><code class="sig-name descname">agentcontacts</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">tx</span></em>, <em class="sig-param"><span class="n">node_a</span></em>, <em class="sig-param"><span class="n">label</span></em>, <em class="sig-param"><span class="n">contact_label</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Interface.agentcontacts" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns outgoing contact edges from a node</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tx</strong> – neo4j read or write transaction</p></li>
+<li><p><strong>node_a</strong> – source node id</p></li>
+<li><p><strong>label</strong> – source node label</p></li>
+<li><p><strong>contact_label</strong> – type of out going relationship</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>relationships and end nodes</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="Interface.colocated">
+<code class="sig-prename descclassname">Interface.</code><code class="sig-name descname">colocated</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">tx</span></em>, <em class="sig-param"><span class="n">agent</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Interface.colocated" title="Permalink to this definition">¶</a></dt>
+<dd><p>Find agents at the same physical node as the given agent</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tx</strong> – neo4j read or write transaction</p></li>
+<li><p><strong>agent</strong> – agent id</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>List of co-located agents</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="Interface.createedge">
+<code class="sig-prename descclassname">Interface.</code><code class="sig-name descname">createedge</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">tx</span></em>, <em class="sig-param"><span class="n">node_a</span></em>, <em class="sig-param"><span class="n">node_b</span></em>, <em class="sig-param"><span class="n">label_a</span></em>, <em class="sig-param"><span class="n">label_b</span></em>, <em class="sig-param"><span class="n">edge_label</span></em>, <em class="sig-param"><span class="n">parameters</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Interface.createedge" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adds and edge between to nodes with attributes and label as given
+:param tx: neo4j write transaction
+:param node_a: source node id
+:param node_b: target node id
+:param label_a: source node label
+:param label_b: target node label
+:param edge_label: label of new edge
+:param parameters: parameters of new edge</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="Interface.deleteagent">
+<code class="sig-prename descclassname">Interface.</code><code class="sig-name descname">deleteagent</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">tx</span></em>, <em class="sig-param"><span class="n">agent</span></em>, <em class="sig-param"><span class="n">uid</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Interface.deleteagent" title="Permalink to this definition">¶</a></dt>
+<dd><p>Delete an agent and it’s location in database</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tx</strong> – neo4j write transaction</p></li>
+<li><p><strong>agent</strong> – agent id</p></li>
+<li><p><strong>uid</strong> – type of id used</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="Interface.deletecontact">
+<code class="sig-prename descclassname">Interface.</code><code class="sig-name descname">deletecontact</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">tx</span></em>, <em class="sig-param"><span class="n">node_a</span></em>, <em class="sig-param"><span class="n">node_b</span></em>, <em class="sig-param"><span class="n">label_a</span></em>, <em class="sig-param"><span class="n">label_b</span></em>, <em class="sig-param"><span class="n">contact_type</span><span class="o">=</span><span class="default_value">'SOCIAL'</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Interface.deletecontact" title="Permalink to this definition">¶</a></dt>
+<dd><p>Deletes a contact edge in the database.
+:param tx: neo4j write transaction
+:param node_a: id of source node
+:param node_b: id of target node
+:param label_a: label of source node
+:param label_b: label of target node
+:param contact_type: label of relationship</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="Interface.getnode">
+<code class="sig-prename descclassname">Interface.</code><code class="sig-name descname">getnode</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">tx</span></em>, <em class="sig-param"><span class="n">nodeid</span></em>, <em class="sig-param"><span class="n">label</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">uid</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Interface.getnode" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the details of a given node</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tx</strong> – neo4j read or write transaction</p></li>
+<li><p><strong>nodeid</strong> – id for wanted node</p></li>
+<li><p><strong>label</strong> – node label</p></li>
+<li><p><strong>uid</strong> – type of id</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Node object</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="Interface.getnodeagents">
+<code class="sig-prename descclassname">Interface.</code><code class="sig-name descname">getnodeagents</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">tx</span></em>, <em class="sig-param"><span class="n">nodeid</span></em>, <em class="sig-param"><span class="n">uid</span><span class="o">=</span><span class="default_value">'name'</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Interface.getnodeagents" title="Permalink to this definition">¶</a></dt>
+<dd><p>Finds all agents currently located at a node</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tx</strong> – neo4j read or write transaction</p></li>
+<li><p><strong>nodeid</strong> – id of node</p></li>
+<li><p><strong>uid</strong> – type of id node uses</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>List of agents at node</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="Interface.getnodevalue">
+<code class="sig-prename descclassname">Interface.</code><code class="sig-name descname">getnodevalue</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">tx</span></em>, <em class="sig-param"><span class="n">node</span></em>, <em class="sig-param"><span class="n">value</span></em>, <em class="sig-param"><span class="n">label</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">uid</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Interface.getnodevalue" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retrieves a particular value from a node</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tx</strong> – neo4j read or write transaction</p></li>
+<li><p><strong>node</strong> – id of the node</p></li>
+<li><p><strong>value</strong> – attribute to return</p></li>
+<li><p><strong>label</strong> – label of the node</p></li>
+<li><p><strong>uid</strong> – type of id used</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>value of attribute asked for</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="Interface.getrunname">
+<code class="sig-prename descclassname">Interface.</code><code class="sig-name descname">getrunname</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">tx</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Interface.getrunname" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retrieve the label formed for this run, saved in node in database</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>tx</strong> – neo4j read or write transaction</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>run name string</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="Interface.gettime">
+<code class="sig-prename descclassname">Interface.</code><code class="sig-name descname">gettime</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">tx</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Interface.gettime" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retrieves the current time on the database clock</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>tx</strong> – neo4j read or write transaction</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Current time on clock</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="Interface.locateagent">
+<code class="sig-prename descclassname">Interface.</code><code class="sig-name descname">locateagent</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">tx</span></em>, <em class="sig-param"><span class="n">agent</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Interface.locateagent" title="Permalink to this definition">¶</a></dt>
+<dd><p>Finds which node the given agent is currently located at.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tx</strong> – read or write transaction for neo4j database</p></li>
+<li><p><strong>agent</strong> – agent id number</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Node the agent is currently located at</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="Interface.perception">
+<code class="sig-prename descclassname">Interface.</code><code class="sig-name descname">perception</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">tx</span></em>, <em class="sig-param"><span class="n">agent</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Interface.perception" title="Permalink to this definition">¶</a></dt>
+<dd><p>Provides the local environment for the given agent</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tx</strong> – write transaction for neo4j database</p></li>
+<li><p><strong>agent</strong> – id number for agent</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Node the agent is located at followed by the outgoing edges of that node and those edges end nodes.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="Interface.shortestpath">
+<code class="sig-prename descclassname">Interface.</code><code class="sig-name descname">shortestpath</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">tx</span></em>, <em class="sig-param"><span class="n">node_a</span></em>, <em class="sig-param"><span class="n">node_b</span></em>, <em class="sig-param"><span class="n">node_label</span></em>, <em class="sig-param"><span class="n">edge_label</span></em>, <em class="sig-param"><span class="n">directed</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Interface.shortestpath" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the length of the shortest path between two nodes</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tx</strong> – neo4j read or write transaction</p></li>
+<li><p><strong>node_a</strong> – first node id</p></li>
+<li><p><strong>node_b</strong> – second node id</p></li>
+<li><p><strong>node_label</strong> – label for both nodes</p></li>
+<li><p><strong>edge_label</strong> – label for the type of relationships to use in path</p></li>
+<li><p><strong>directed</strong> – whether to consider direction of path in calculations</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Length of shortest path between two nodes</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="Interface.tick">
+<code class="sig-prename descclassname">Interface.</code><code class="sig-name descname">tick</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">tx</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Interface.tick" title="Permalink to this definition">¶</a></dt>
+<dd><p>Increment the clock in the database</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>tx</strong> – neo4j write transaction</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>New time</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="Interface.updateagent">
+<code class="sig-prename descclassname">Interface.</code><code class="sig-name descname">updateagent</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">tx</span></em>, <em class="sig-param"><span class="n">node</span></em>, <em class="sig-param"><span class="n">attr</span></em>, <em class="sig-param"><span class="n">value</span></em>, <em class="sig-param"><span class="n">uid</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Interface.updateagent" title="Permalink to this definition">¶</a></dt>
+<dd><p>Update and agents attribute value.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tx</strong> – neo4j write transaction</p></li>
+<li><p><strong>node</strong> – node id</p></li>
+<li><p><strong>attr</strong> – attribute to be updated</p></li>
+<li><p><strong>value</strong> – new value of attribute</p></li>
+<li><p><strong>uid</strong> – type of id used</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="Interface.updatecontactedge">
+<code class="sig-prename descclassname">Interface.</code><code class="sig-name descname">updatecontactedge</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">tx</span></em>, <em class="sig-param"><span class="n">node_a</span></em>, <em class="sig-param"><span class="n">node_b</span></em>, <em class="sig-param"><span class="n">attribute</span></em>, <em class="sig-param"><span class="n">value</span></em>, <em class="sig-param"><span class="n">label_a</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">label_b</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Interface.updatecontactedge" title="Permalink to this definition">¶</a></dt>
+<dd><p>Update a value on a SOCIAL edge based on the nodes at each end.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tx</strong> – write transaction for neo4j database</p></li>
+<li><p><strong>node_a</strong> – id of first node</p></li>
+<li><p><strong>node_b</strong> – id of second node</p></li>
+<li><p><strong>attribute</strong> – attribute to be updated</p></li>
+<li><p><strong>value</strong> – new value of attribute</p></li>
+<li><p><strong>label_a</strong> – label of first node</p></li>
+<li><p><strong>label_b</strong> – label of second node</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="Interface.updateedge">
+<code class="sig-prename descclassname">Interface.</code><code class="sig-name descname">updateedge</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">tx</span></em>, <em class="sig-param"><span class="n">edge</span></em>, <em class="sig-param"><span class="n">attr</span></em>, <em class="sig-param"><span class="n">value</span></em>, <em class="sig-param"><span class="n">uid</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Interface.updateedge" title="Permalink to this definition">¶</a></dt>
+<dd><p>Modify an attribute of an edge</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tx</strong> – neo4j write transaction</p></li>
+<li><p><strong>edge</strong> – relationship object</p></li>
+<li><p><strong>attr</strong> – attribute to modify</p></li>
+<li><p><strong>value</strong> – new value of attribute</p></li>
+<li><p><strong>uid</strong> – type of id used in system</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="Interface.updatenode">
+<code class="sig-prename descclassname">Interface.</code><code class="sig-name descname">updatenode</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">tx</span></em>, <em class="sig-param"><span class="n">node</span></em>, <em class="sig-param"><span class="n">attr</span></em>, <em class="sig-param"><span class="n">value</span></em>, <em class="sig-param"><span class="n">uid</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">label</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Interface.updatenode" title="Permalink to this definition">¶</a></dt>
+<dd><p>Update attribute of a node</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tx</strong> – neo4j write transaction</p></li>
+<li><p><strong>node</strong> – node id</p></li>
+<li><p><strong>attr</strong> – attribute to be updated</p></li>
+<li><p><strong>value</strong> – new value for the attribute</p></li>
+<li><p><strong>uid</strong> – type of id being used</p></li>
+<li><p><strong>label</strong> – lable of node</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="code.html"
+                        title="previous chapter">SPm run script</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/interface.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="code.html" title="SPm run script"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Socio-Physical Modelling 0.0.1 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2020, Penny Faulkner Rainford.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 3.0.2.
+    </div>
+  </body>
+</html>

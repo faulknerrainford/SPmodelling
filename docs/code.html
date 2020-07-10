@@ -4,7 +4,7 @@
 <html>
   <head>
     <meta charset="utf-8" />
-    <title>SPm run script documentation &#8212; Socio-Physical Modelling 0.0.1 documentation</title>
+    <title>SPm run script &#8212; Socio-Physical Modelling 0.0.1 documentation</title>
     <link rel="stylesheet" href="_static/classic.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     
@@ -16,6 +16,7 @@
     
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Interface" href="interface.html" />
     <link rel="prev" title="Summary" href="summary.html" /> 
   </head><body>
     <div class="related" role="navigation" aria-label="related navigation">
@@ -27,6 +28,9 @@
         <li class="right" >
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
+        <li class="right" >
+          <a href="interface.html" title="Interface"
+             accesskey="N">next</a> |</li>
         <li class="right" >
           <a href="summary.html" title="Summary"
              accesskey="P">previous</a> |</li>
@@ -40,10 +44,10 @@
           <div class="body" role="main">
             
   <div class="section" id="module-SPm">
-<span id="spm-run-script-documentation"></span><h1>SPm run script documentation<a class="headerlink" href="#module-SPm" title="Permalink to this headline">¶</a></h1>
+<span id="spm-run-script"></span><h1>SPm run script<a class="headerlink" href="#module-SPm" title="Permalink to this headline">¶</a></h1>
 <dl class="py function">
 <dt id="SPm.main">
-<code class="sig-prename descclassname">SPm.</code><code class="sig-name descname">main</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">runs</span></em>, <em class="sig-param"><span class="n">length</span></em>, <em class="sig-param"><span class="n">population</span></em><span class="sig-paren">)</span><a class="headerlink" href="#SPm.main" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">SPm.</code><code class="sig-name descname">main</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">runs</span></em>, <em class="sig-param"><span class="n">length</span></em>, <em class="sig-param"><span class="n">population</span></em>, <em class="sig-param"><span class="n">modules</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#SPm.main" title="Permalink to this definition">¶</a></dt>
 <dd><p>This function takes the number of runs required, the time-step length of each run and the size of population and
 runs a SPmodel based on the local specification file. It saves all output to a run name as defined by the parameters
 given and the specification. This uses concurrent.futures to run the Monitor, Population, Structure, Balancer and
@@ -54,6 +58,547 @@ Flow concurrently.</p>
 <li><p><strong>runs</strong> – Number of models runs required</p></li>
 <li><p><strong>length</strong> – Time-step length of each run</p></li>
 <li><p><strong>population</strong> – Size of initial and maintained population for each run</p></li>
+<li><p><strong>modules</strong> – List of modules to be used in this modelling batch eg. [‘Monitor’, ‘Flow’, ‘Population’, ‘Balancer’,
+‘Structure’, ‘Social’]</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="module-Agent">
+<span id="agent-class-flow-and-population-control"></span><h1>Agent Class, Flow and Population Control<a class="headerlink" href="#module-Agent" title="Permalink to this headline">¶</a></h1>
+<dl class="py class">
+<dt id="Agent.CommunicativeAgent">
+<em class="property">class </em><code class="sig-prename descclassname">Agent.</code><code class="sig-name descname">CommunicativeAgent</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">agentid</span></em>, <em class="sig-param"><span class="n">params</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">nuid</span><span class="o">=</span><span class="default_value">'id'</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Agent.CommunicativeAgent" title="Permalink to this definition">¶</a></dt>
+<dd><p>Agent Class for agents in social networks. These agents act as nodes as well as agents.</p>
+<dl class="py method">
+<dt id="Agent.CommunicativeAgent.listen">
+<em class="property">abstract </em><code class="sig-name descname">listen</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">tx</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Agent.CommunicativeAgent.listen" title="Permalink to this definition">¶</a></dt>
+<dd><p>The subclass should implement this function to allow agents to change their values or form new connections based
+on the situation after talking.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>tx</strong> – write transaction for a neo4j database</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="Agent.CommunicativeAgent.look">
+<em class="property">abstract </em><code class="sig-name descname">look</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">tx</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Agent.CommunicativeAgent.look" title="Permalink to this definition">¶</a></dt>
+<dd><p>The subclass should implement this function to allow the agent to detect other entities in its social network.
+Can also be used to detect agents colocated with it in a physical network.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>tx</strong> – read or write transaction for a neo4j database</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="Agent.CommunicativeAgent.react">
+<em class="property">abstract </em><code class="sig-name descname">react</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">tx</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Agent.CommunicativeAgent.react" title="Permalink to this definition">¶</a></dt>
+<dd><p>The subclass should implement this function. The agent has a final opportunity to adjust its values and manage
+its social network. This includes managing the number of social links.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>tx</strong> – write transaction for neo4j database</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="Agent.CommunicativeAgent.socialise">
+<code class="sig-name descname">socialise</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">tx</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Agent.CommunicativeAgent.socialise" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function does not need to be implemented in the subclass. It calls the five functions that an agent
+performs as an action. The agent will: look, update, talk, listen and then react.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>tx</strong> – neo4j write transaction</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="Agent.CommunicativeAgent.talk">
+<em class="property">abstract </em><code class="sig-name descname">talk</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">tx</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Agent.CommunicativeAgent.talk" title="Permalink to this definition">¶</a></dt>
+<dd><p>The subclass should implement this function to allow agents to form new social connections possibly through
+existing connections or co-location.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>tx</strong> – write transaction for a neo4j database</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="Agent.CommunicativeAgent.update">
+<em class="property">abstract </em><code class="sig-name descname">update</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">tx</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Agent.CommunicativeAgent.update" title="Permalink to this definition">¶</a></dt>
+<dd><p>The subclass should implement this function to allow the agent to update it’s own values based on it’s local
+social network and colocated agents in physical networks.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>tx</strong> – write transaction for a neo4j database</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="Agent.MobileAgent">
+<em class="property">class </em><code class="sig-prename descclassname">Agent.</code><code class="sig-name descname">MobileAgent</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">agentid</span></em>, <em class="sig-param"><span class="n">params</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">nuid</span><span class="o">=</span><span class="default_value">'id'</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Agent.MobileAgent" title="Permalink to this definition">¶</a></dt>
+<dd><p>Class for simulating agents which move between locations in a network</p>
+<dl class="py method">
+<dt id="Agent.MobileAgent.choose">
+<em class="property">abstract </em><code class="sig-name descname">choose</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">tx</span></em>, <em class="sig-param"><span class="n">perc</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Agent.MobileAgent.choose" title="Permalink to this definition">¶</a></dt>
+<dd><p>Subclass must implement this function to make a choice between all possible options after node and agent filtering
+This class calls the agent perception function so super call must be made at start of funciton.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tx</strong> – read or write transaction for neo4j</p></li>
+<li><p><strong>perc</strong> – passed by node to give agent current local options</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="Agent.MobileAgent.generator">
+<em class="property">abstract </em><code class="sig-name descname">generator</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">tx</span></em>, <em class="sig-param"><span class="n">params</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Agent.MobileAgent.generator" title="Permalink to this definition">¶</a></dt>
+<dd><p>Subclass should implement code to generate a specialised agent using the interface to insert the new agent into
+the database, the base function does nothing.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tx</strong> – write transaction for a neo4j database</p></li>
+<li><p><strong>params</strong> – paramaters are given as a list to be used by the subclass.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="Agent.MobileAgent.learn">
+<em class="property">abstract </em><code class="sig-name descname">learn</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">tx</span></em>, <em class="sig-param"><span class="n">choice</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Agent.MobileAgent.learn" title="Permalink to this definition">¶</a></dt>
+<dd><p>Subclass must implement this function to make changes to the agent and node after moving.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tx</strong> – write transaction for neo4j</p></li>
+<li><p><strong>choice</strong> – Relationship object passed from the interface which the agent moved along</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>[choice, tx] Relationship object and neo4j write transaction</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="Agent.MobileAgent.move">
+<code class="sig-name descname">move</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">tx</span></em>, <em class="sig-param"><span class="n">perc</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Agent.MobileAgent.move" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function performs action of the agent. It calls the choice function and checks for a return and a payment
+has been made (if the payment fails the agent doesn’t move). The agent is moved and then learns. There is no
+reason for subclasses to implement this function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tx</strong> – neo4j write transaction</p></li>
+<li><p><strong>perc</strong> – perception of local surroundings passed to agent by it’s local node</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>If agent moves return the new local node</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="Agent.MobileAgent.payment">
+<em class="property">abstract </em><code class="sig-name descname">payment</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">tx</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Agent.MobileAgent.payment" title="Permalink to this definition">¶</a></dt>
+<dd><p>Subclass must implement this function to make changes to the agent, edges and nodes before/during movement.
+Including paying any cost of the movement.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>tx</strong> – write transaction for neo4j database</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="Agent.MobileAgent.perception">
+<em class="property">abstract </em><code class="sig-name descname">perception</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">tx</span></em>, <em class="sig-param"><span class="n">perc</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Agent.MobileAgent.perception" title="Permalink to this definition">¶</a></dt>
+<dd><p>Subclass must implement this class to perform the Agents filtering to remove options the agent considers not
+possible for it. The agent will then reset the agent view to the filtered version.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tx</strong> – Read or write transaction for neo4j database</p></li>
+<li><p><strong>perc</strong> – Perception passed to agent from local node</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<span class="target" id="module-Flow"></span><dl class="py function">
+<dt id="Flow.main">
+<code class="sig-prename descclassname">Flow.</code><code class="sig-name descname">main</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">rl</span></em>, <em class="sig-param"><span class="n">rn</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Flow.main" title="Permalink to this definition">¶</a></dt>
+<dd><p>Process agents at each node and call the move function for each. Ticks the clock after all agents have been
+processed. Stops when clock reaches or exceeds run length.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>rl</strong> – run length</p></li>
+<li><p><strong>rn</strong> – run number</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="module-Node">
+<span id="node-balancer-and-structure-change"></span><h1>Node, Balancer and Structure Change<a class="headerlink" href="#module-Node" title="Permalink to this headline">¶</a></h1>
+<dl class="py class">
+<dt id="Node.Node">
+<em class="property">class </em><code class="sig-prename descclassname">Node.</code><code class="sig-name descname">Node</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">name</span></em>, <em class="sig-param"><span class="n">capacity</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">duration</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">queue</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">nuid</span><span class="o">=</span><span class="default_value">'name'</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Node.Node" title="Permalink to this definition">¶</a></dt>
+<dd><p>Node class implements physical node locations</p>
+<dl class="py method">
+<dt id="Node.Node.agentperception">
+<em class="property">abstract </em><code class="sig-name descname">agentperception</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">tx</span></em>, <em class="sig-param"><span class="n">agent</span></em>, <em class="sig-param"><span class="n">dest</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">waittime</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Node.Node.agentperception" title="Permalink to this definition">¶</a></dt>
+<dd><p>The local environment of the node filtered by availability to a particular agent. Subclass must implement this
+function to add node filtering for particular model</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tx</strong> – neo4j read or write transaction</p></li>
+<li><p><strong>agent</strong> – agent id</p></li>
+<li><p><strong>dest</strong> – passed by nodes with queues if agent destination has already been determined by prediction.</p></li>
+<li><p><strong>waittime</strong> – time the agent has been waiting at the node</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>view of local environment for agent as list of relationships</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="Node.Node.agentprediction">
+<em class="property">abstract </em><code class="sig-name descname">agentprediction</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">tx</span></em>, <em class="sig-param"><span class="n">agent</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Node.Node.agentprediction" title="Permalink to this definition">¶</a></dt>
+<dd><p>Predict how long the agent will stay at the node and its destination once it leaves. This must be implemented by
+the subclass to predict agent behaviour if node has a queue.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tx</strong> – neo4j write transaction</p></li>
+<li><p><strong>agent</strong> – agent id</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>view of local environment for agent</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="Node.Node.agentsready">
+<em class="property">abstract </em><code class="sig-name descname">agentsready</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">tx</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Node.Node.agentsready" title="Permalink to this definition">¶</a></dt>
+<dd><p>Identifies the set of current agents for processing, either the correct set in the queue or all the agents at
+the node. It checks for unqueued agents in nodes with queue and runs the nodes prediction function to add them
+to the queue. It then gathers the agents local environment perception and passes that to the agent when calling
+the move function. We then delete the part of the queue that has been processed to save space. Subclass must
+implement this function for any aspects unique to model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>tx</strong> – neo4j write transaction</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<span class="target" id="module-Balancer"></span><dl class="py class">
+<dt id="Balancer.FlowReaction">
+<em class="property">class </em><code class="sig-prename descclassname">Balancer.</code><code class="sig-name descname">FlowReaction</code><a class="headerlink" href="#Balancer.FlowReaction" title="Permalink to this definition">¶</a></dt>
+<dd><p>Class to implement modifications to edges and nodes with out changing the structure of the network. This should be
+based on the movement and behaviours of the agent population or on events in the system.</p>
+<dl class="py method">
+<dt id="Balancer.FlowReaction.applyrules">
+<em class="property">abstract </em><code class="sig-name descname">applyrules</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">txl</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Balancer.FlowReaction.applyrules" title="Permalink to this definition">¶</a></dt>
+<dd><p>The subclass must implement this function to apply a change rule to the system. This rule will be applied
+iteratively and may need a check and wait system to avoid over application depending on the intended use of the
+rule.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>txl</strong> – write transaction for neo4j database</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt id="Balancer.main">
+<code class="sig-prename descclassname">Balancer.</code><code class="sig-name descname">main</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">rl</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Balancer.main" title="Permalink to this definition">¶</a></dt>
+<dd><p>Implements a FlowReaction repeatedly until the clock in the database reaches the run length.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>rl</strong> – run length</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<span class="target" id="module-Structure"></span><dl class="py class">
+<dt id="Structure.Structure">
+<em class="property">class </em><code class="sig-prename descclassname">Structure.</code><code class="sig-name descname">Structure</code><a class="headerlink" href="#Structure.Structure" title="Permalink to this definition">¶</a></dt>
+<dd><p>Implements structural changes in model</p>
+<dl class="py method">
+<dt id="Structure.Structure.applychange">
+<em class="property">abstract </em><code class="sig-name descname">applychange</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">txl</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Structure.Structure.applychange" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function must be implemented by the subclass to check for events and apply structural changes to the system
+environment.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>txl</strong> – neo4j write transaction</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt id="Structure.main">
+<code class="sig-prename descclassname">Structure.</code><code class="sig-name descname">main</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">rl</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Structure.main" title="Permalink to this definition">¶</a></dt>
+<dd><p>Runs to apply structural change to the system checks continue until clock reaches or exceeds run length</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>rl</strong> – run length</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="module-Monitor">
+<span id="monitor"></span><h1>Monitor<a class="headerlink" href="#module-Monitor" title="Permalink to this headline">¶</a></h1>
+<dl class="py class">
+<dt id="Monitor.Monitor">
+<em class="property">class </em><code class="sig-prename descclassname">Monitor.</code><code class="sig-name descname">Monitor</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">show_local</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Monitor.Monitor" title="Permalink to this definition">¶</a></dt>
+<dd><p>Class implements a viewer for the system which outputs a grid of graphs during run time and saves out graphs and
+data collected at end of run</p>
+<dl class="py method">
+<dt id="Monitor.Monitor.close">
+<em class="property">abstract </em><code class="sig-name descname">close</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">txl</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Monitor.Monitor.close" title="Permalink to this definition">¶</a></dt>
+<dd><p>Subclass must implement to save out data and graphs for analysis</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>txl</strong> – neo4j read or write transaction</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="Monitor.Monitor.snapshot">
+<em class="property">abstract </em><code class="sig-name descname">snapshot</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">txl</span></em>, <em class="sig-param"><span class="n">ctime</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Monitor.Monitor.snapshot" title="Permalink to this definition">¶</a></dt>
+<dd><p>Captures data from a single time step in database. Subclass must implement to capture wanted data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>txl</strong> – neo4j read or write transaction</p></li>
+<li><p><strong>ctime</strong> – current time</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>True if snapshot is successful.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt id="Monitor.main">
+<code class="sig-prename descclassname">Monitor.</code><code class="sig-name descname">main</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">rl</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Monitor.main" title="Permalink to this definition">¶</a></dt>
+<dd><p>Runs the monitor snapshot until clock reaches or exceeds run length. Then closes monitor.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>rl</strong> – run length</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="module-Reset">
+<span id="reset"></span><h1>Reset<a class="headerlink" href="#module-Reset" title="Permalink to this headline">¶</a></h1>
+<dl class="py class">
+<dt id="Reset.Reset">
+<em class="property">class </em><code class="sig-prename descclassname">Reset.</code><code class="sig-name descname">Reset</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">reset_tag</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Reset.Reset" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reset database to initial settings for new run.</p>
+<dl class="py method">
+<dt id="Reset.Reset.clear_database">
+<em class="property">static </em><code class="sig-name descname">clear_database</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">tx</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Reset.Reset.clear_database" title="Permalink to this definition">¶</a></dt>
+<dd><p>Remove all nodes and relationships from database</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>tx</strong> – neo4j write transaction</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>NOne</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="Reset.Reset.generate_population">
+<em class="property">abstract static </em><code class="sig-name descname">generate_population</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">tx</span></em>, <em class="sig-param"><span class="n">pop_size</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Reset.Reset.generate_population" title="Permalink to this definition">¶</a></dt>
+<dd><p>Subclass must implement this to set up the initial population of the run</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tx</strong> – neo4j write transaction</p></li>
+<li><p><strong>pop_size</strong> – number of agents to add to system</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="Reset.Reset.set_clock">
+<em class="property">static </em><code class="sig-name descname">set_clock</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">tx</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Reset.Reset.set_clock" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialise a clock node to zero</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>tx</strong> – neo4j write transaction</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="Reset.Reset.set_edges">
+<em class="property">abstract static </em><code class="sig-name descname">set_edges</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">tx</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Reset.Reset.set_edges" title="Permalink to this definition">¶</a></dt>
+<dd><p>Subclass must implement this to set up the initial environment edges and relationships for a run</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>tx</strong> – neo4j write transaction</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="Reset.Reset.set_nodes">
+<em class="property">abstract static </em><code class="sig-name descname">set_nodes</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">tx</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Reset.Reset.set_nodes" title="Permalink to this definition">¶</a></dt>
+<dd><p>Subclass must implement this to set up the initial environment nodes for a run</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>tx</strong> – neo4j write transaction</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="Reset.Reset.set_output">
+<code class="sig-name descname">set_output</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">tx</span></em>, <em class="sig-param"><span class="n">run_number</span></em>, <em class="sig-param"><span class="n">pop_size</span></em>, <em class="sig-param"><span class="n">run_length</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Reset.Reset.set_output" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set name of run for output files</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tx</strong> – neo4j write transaction</p></li>
+<li><p><strong>run_number</strong> – run number</p></li>
+<li><p><strong>pop_size</strong> – size of initial population</p></li>
+<li><p><strong>run_length</strong> – number of time steps in run</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt id="Reset.main">
+<code class="sig-prename descclassname">Reset.</code><code class="sig-name descname">main</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">rn</span></em>, <em class="sig-param"><span class="n">ps</span></em>, <em class="sig-param"><span class="n">rl</span></em><span class="sig-paren">)</span><a class="headerlink" href="#Reset.main" title="Permalink to this definition">¶</a></dt>
+<dd><p>Runs the rest class functions to  set up database for a run</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>rn</strong> – Number of run of the model</p></li>
+<li><p><strong>ps</strong> – size of population</p></li>
+<li><p><strong>rl</strong> – number of time steps in each run</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -70,9 +615,21 @@ Flow concurrently.</p>
       </div>
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
         <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">SPm run script</a></li>
+<li><a class="reference internal" href="#module-Agent">Agent Class, Flow and Population Control</a></li>
+<li><a class="reference internal" href="#module-Node">Node, Balancer and Structure Change</a></li>
+<li><a class="reference internal" href="#module-Monitor">Monitor</a></li>
+<li><a class="reference internal" href="#module-Reset">Reset</a></li>
+</ul>
+
   <h4>Previous topic</h4>
   <p class="topless"><a href="summary.html"
                         title="previous chapter">Summary</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="interface.html"
+                        title="next chapter">Interface</a></p>
   <div role="note" aria-label="source link">
     <h3>This Page</h3>
     <ul class="this-page-menu">
@@ -103,6 +660,9 @@ Flow concurrently.</p>
         <li class="right" >
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
+        <li class="right" >
+          <a href="interface.html" title="Interface"
+             >next</a> |</li>
         <li class="right" >
           <a href="summary.html" title="Summary"
              >previous</a> |</li>
