@@ -1,13 +1,20 @@
 from neo4j import GraphDatabase
-from SPmodelling.Interface import Interface
-import SPmodelling.specification as specification
+# import SPmodelling.Interface as intf
+import specification
 
 
 def main(rl, rn):
+    """
+    Calls the socialise function for each agent in system until clock reaches or exceeds run length
+
+    :param rl: run length
+    :param rn: run number
+
+    :return: None
+    """
     verbose = False
     uri = specification.database_uri
     dri = GraphDatabase.driver(uri, auth=specification.Flow_auth, max_connection_lifetime=2000)
-    intf = Interface()
     with dri.session() as ses:
         clock = 0
         while clock < rl:
@@ -16,8 +23,9 @@ def main(rl, rn):
                             "RETURN a.id").values()
             for agent in agents:
                 ag = specification.Agent(agent)
-                ag.socialise(tx, intf)
+                ag.socialise(tx)
             clock = intf.gettime(tx)
             print("T: " + clock.__str__())
+            tx.close()
     dri.close()
     print("Social closed")

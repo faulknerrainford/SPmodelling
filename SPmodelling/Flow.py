@@ -1,24 +1,22 @@
 from neo4j import GraphDatabase
-from SPmodelling.Interface import Interface
 import specification
-
-
-# def activeagentsave(tx, activenodes, interface, rn):
-#     file = open("AgentLogs" + rn + ".p", 'ab')
-#     for anode in activenodes:
-#         agents = interface.getnodeagents(tx, anode.name)
-#         for agent in agents:
-#             record = "Agent " + str(agent["id"]) + ": " + agent["log"]
-#             pickle.dump(record, file)
-#     file.close()
-
+import SPmodelling.Interface as intf
 
 def main(rl, rn):
+    """
+    Process agents at each node and call the move function for each. Ticks the clock after all agents have been
+    processed. Stops when clock reaches or exceeds run length.
+
+    :param rl: run length
+    :param rn: run number
+
+    :return: None
+    """
+    print("In to flow")
     verbose = False
     uri = specification.database_uri
     dri = GraphDatabase.driver(uri, auth=specification.Flow_auth, max_connection_lifetime=2000)
     nuid = "name"
-    intf = Interface()
     runtype = "dynamic"
     runnum = rn
     runname = "careag_" + runtype + "_" + str(runnum)
@@ -26,11 +24,9 @@ def main(rl, rn):
         clock = 0
         while clock < rl:
             for node in specification.nodes:
-                ses.write_transaction(node.agentsready, intf)
-            res = ses.run("MATCH (a:Clock) "
-                          "SET a.time = a.time + 1 "
-                          "RETURN a.time")
-            clock = res.values()[0][0]
+                ses.write_transaction(node.agentsready)
+            clock = ses.write_transaction(intf.gettime)
+            ses.write_transaction(intf.tick)
             print("T: " + clock.__str__())
         # ses.write_transaction(activeagentsave, nodes[1:], intf, runname)
     dri.close()
