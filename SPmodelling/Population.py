@@ -1,11 +1,18 @@
 from neo4j import GraphDatabase
-from SPmodelling.Interface import Interface
+import SPmodelling.Interface as intf
 import specification as specification
 
 
 def main(rl, ps):
-    uri = "bolt://localhost:7687"
-    interface = Interface()
+    """
+    Checks population levels meet requirements and adds additional agents if needed until clock reaches or exceeds run
+    length
+
+    :param rl: run length
+    :param ps: population size
+
+    :return: None
+    """
     clock = 0
     agent = specification.Agents(None)
     while clock < rl:
@@ -15,11 +22,11 @@ def main(rl, ps):
             populationdeficite = specification.Population.check(ses, ps)
             if populationdeficite:
                 for i in range(populationdeficite):
-                    ses.write_transaction(agent.generator, interface, specification.Population.params)
+                    ses.write_transaction(agent.generator, specification.Population.params)
             tx = ses.begin_transaction()
-            time = interface.gettime(tx)
+            time = intf.gettime(tx)
             while clock == time:
-                time = interface.gettime(tx)
+                time = intf.gettime(tx)
             clock = time
         dri.close()
     print("Population closed")

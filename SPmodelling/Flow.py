@@ -1,14 +1,22 @@
 from neo4j import GraphDatabase
-from SPmodelling.Interface import Interface
 import specification
+import SPmodelling.Interface as intf
 
 def main(rl, rn):
+    """
+    Process agents at each node and call the move function for each. Ticks the clock after all agents have been
+    processed. Stops when clock reaches or exceeds run length.
+
+    :param rl: run length
+    :param rn: run number
+
+    :return: None
+    """
     print("In to flow")
     verbose = False
     uri = specification.database_uri
     dri = GraphDatabase.driver(uri, auth=specification.Flow_auth, max_connection_lifetime=2000)
     nuid = "name"
-    intf = Interface()
     runtype = "dynamic"
     runnum = rn
     runname = "careag_" + runtype + "_" + str(runnum)
@@ -16,7 +24,7 @@ def main(rl, rn):
         clock = 0
         while clock < rl:
             for node in specification.nodes:
-                ses.write_transaction(node.agentsready, intf)
+                ses.write_transaction(node.agentsready)
             clock = ses.write_transaction(intf.gettime)
             ses.write_transaction(intf.tick)
             print("T: " + clock.__str__())
