@@ -1,8 +1,10 @@
-# import SPmodelling
-import concurrent.futures
+import SPmodelling
+# import concurrent.futures
+from multiprocessing import Process, Queue
 print("finished spm imports")
 
 
+# noinspection PyRedundantParentheses
 def main(runs, length, population, modules=None):
     """
     This function takes the number of runs required, the time-step length of each run and the size of population and
@@ -22,24 +24,38 @@ def main(runs, length, population, modules=None):
         SPmodelling.Reset.main(i, population, length)
         print("Finished Reset")
         if modules:
-            executor = concurrent.futures.ThreadPoolExecutor(max_workers=2)
+            q = Queue()
+            current_processes = []
             if "Monitor" in modules:
-                executor.submit(SPmodelling.Monitor.main, length)
+                monitor = Process(target=SPmodelling.Monitor.main, args=tuple([length]))
+                monitor.start()
+                current_processes.append(monitor)
             if "Population" in modules:
-                executor.submit(SPmodelling.Population.main, length, population)
+                print("Executing Population")
+                inter1 = Process(target=SPmodelling.Population.main, args=(length, population))
+                inter1.start()
+                current_processes.append(inter1)
             if "Structure" in modules:
-                executor.submit(SPmodelling.Structure.main, length)
+                inter2 = Process(target=SPmodelling.Structure.main, args=tuple([length]))
+                inter2.start()
+                current_processes.append(inter2)
             if "Balancer" in modules:
-                executor.submit(SPmodelling.Balancer.main, length)
+                print("Execution Balancer")
+                inter3 = Process(target=SPmodelling.Balancer.main, args=tuple([length]))
+                inter3.start()
+                current_processes.append(inter3)
             if "Flow" in modules:
                 print("Executing Flow")
-                # SPmodelling.Flow.main(length, i)
-                executor.submit(SPmodelling.Flow.main, length, i)
+                agent1 = Process(target=SPmodelling.Flow.main, args=(length, i))
+                agent1.start()
+                current_processes.append(agent1)
             if "Social" in modules:
                 print("Executing Social")
-                # SPmodelling.Social.main(length, i)
-                executor.submit(SPmodelling.Social.main, length)
-            executor.shutdown()
+                social1 = Process(target=SPmodelling.Social.main, args=(length, i))
+                social1.start()
+                current_processes.append(social1)
+            [pro.join() for pro in current_processes]
+
     print("Main thread exit")
 
 

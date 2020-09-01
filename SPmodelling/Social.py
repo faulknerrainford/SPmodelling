@@ -1,5 +1,5 @@
 from neo4j import GraphDatabase
-# import SPmodelling.Interface as intf
+import SPmodelling.Interface as intf
 import specification
 
 
@@ -21,9 +21,14 @@ def main(rl, rn):
             tx = ses.begin_transaction()
             agents = tx.run("MATCH (a:Agent) "
                             "RETURN a.id").values()
+            agents = [agent[0] for agent in agents]
             for agent in agents:
-                ag = specification.Agent(agent)
-                ag.socialise(tx)
+                if labels := intf.checknodelabel(tx, agent, "id"):
+                    for label in labels:
+                        if label in specification.agentclasses.keys():
+                            Agclass = specification.agentclasses[label]
+                            agclass = Agclass(agent)
+                            agclass.socialise(tx)
             clock = intf.gettime(tx)
             print("T: " + clock.__str__())
             tx.close()

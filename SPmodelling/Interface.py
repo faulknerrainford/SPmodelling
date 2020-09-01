@@ -1,3 +1,6 @@
+from neobolt.exceptions import TransientError
+
+
 def perception(tx, agent):
     """
     Provides the local environment for the given agent
@@ -7,11 +10,16 @@ def perception(tx, agent):
 
     :return: Node the agent is located at followed by the outgoing edges of that node and those edges end nodes.
     """
-    results = tx.run("MATCH (m:Agent)-[s:LOCATED]->(n:Node) "
-                     "WITH n, m "
-                     "WHERE m.id={agent} "
-                     "MATCH (n)-[r:REACHES]->(a) "
-                     "RETURN n, r, a", agent=agent).values()
+    while True:
+        try:
+            results = tx.run("MATCH (m:Agent)-[s:LOCATED]->(n:Node) "
+                             "WITH n, m "
+                             "WHERE m.id={agent} "
+                             "MATCH (n)-[r:REACHES]->(a) "
+                             "RETURN n, r, a", agent=agent).values()
+            break
+        except TransientError:
+            pass
     if results:
         node = results[0][0]
         edges = [edge[1] for edge in results]
@@ -28,9 +36,14 @@ def locateagent(tx, agent):
 
     :return: Node the agent is currently located at
     """
-    results = tx.run("MATCH (m:Agent)-[s:LOCATED]->(n:Node) "
-                     "WHERE m.id={agent} "
-                     "RETURN n", agent=agent).values()
+    while True:
+        try:
+            results = tx.run("MATCH (m:Agent)-[s:LOCATED]->(n:Node) "
+                             "WHERE m.id={agent} "
+                             "RETURN n", agent=agent).values()
+            break
+        except TransientError:
+            pass
     return results[0][0]
 
 
@@ -48,19 +61,51 @@ def updatecontactedge(tx, node_a, node_b, attribute, value, label_a=None, label_
 
     :return: None
     """
+    if not isinstance(value, str):
+        value = str(value)
     query = "MATCH (a"
     if label_a:
         query = query + ":" + label_a
-    query = query + ")-[r:SOCIAL]->(b"
+    query = query + ")-[r:SOCIAL]-(b"
     if label_b:
         query = query + ":" + label_b
-    query = query + ") WHERE a.id={node_a} and b.id={node_b} SET r." + attribute + "={value} "
-    tx.run(query, node_a=node_a, node_b=node_b, value=value)
+    query = query + ") WHERE a.id=" + str(node_a) + " and b.id=" + str(node_b) + " SET r." + attribute + "=" + value
+    while True:
+        try:
+            tx.run(query)
+            break
+        except TransientError:
+            pass
+
+
+def checknodelabel(tx, node_a, uid):
+    """
+    Return node to check labels of node based on its id, need to provide the type of unique id
+
+    :param tx: read or write transaction for neo4j database
+    :param node_a: unique identifier for node
+    :param uid: type of unique identifier - name or id
+
+    :return: neo4j node object
+    """
+    query = "MATCH (a) WHERE a." + uid + "=" + str(node_a) + " RETURN distinct labels(a)"
+    while True:
+        try:
+            results = tx.run(query).values()
+            break
+        except TransientError:
+            pass
+    if results:
+        results = results[0][0]
+        return results
+    else:
+        return None
 
 
 def deletecontact(tx, node_a, node_b, label_a, label_b, contact_type='SOCIAL'):
     """
     Deletes a contact edge in the database.
+
     :param tx: neo4j write transaction
     :param node_a: id of source node
     :param node_b: id of target node
@@ -73,9 +118,40 @@ def deletecontact(tx, node_a, node_b, label_a, label_b, contact_type='SOCIAL'):
     query = "MATCH (a:" + label_a + ")-[r"
     if contact_type:
         query = query + ":" + contact_type
-    query = query + "]->(b:" + label_b + ") WHERE a.id=" + str(node_a) + " and b.id=" + str(node_b)
+    query = query + "]-(b:" + label_b + ") WHERE a.id=" + str(node_a) + " and b.id=" + str(node_b)
     query = query + " DELETE r RETURN COUNT(r)"
-    tx.run(query)
+    while True:
+        try:
+            tx.run(query)
+            break
+        except TransientError:
+            pass
+
+
+def agentrelationships(tx, node_a, node_label, rel_type, directed=False):
+    """
+    Returns outgoing contact edges from a node
+
+    :param tx: neo4j read or write transaction
+    :param node_a: source node id
+    :param node_label: source node label
+    :param rel_type: type of relationship to look for
+    :param directed: if the relationship should be considered directed or undirected
+
+    :return: relationships and end nodes
+    """
+    if directed:
+        direction = ">"
+    else:
+        direction = ""
+    while True:
+        try:
+            results = tx.run("MATCH (a:" + node_label + ")-[r:" + rel_type + "]-" + direction
+                             + "(b) WHERE a.id={node_a} RETURN r, b", node_a=node_a).values()
+            break
+        except TransientError:
+            pass
+    return [res[0] for res in results]
 
 
 def agentcontacts(tx, node_a, label, contact_label=None):
@@ -89,13 +165,15 @@ def agentcontacts(tx, node_a, label, contact_label=None):
 
     :return: relationships and end nodes
     """
-    if contact_label:
-        contact_label = ": " + contact_label
-    else:
-        contact_label = ": " + label
-    results = tx.run("MATCH (a:" + label + ")-[r:SOCIAL]->(b" + contact_label + ") "
-                                                                                "WHERE a.id={node_a} "
-                                                                                "RETURN r, b", node_a=node_a).values()
+    if not contact_label:
+        contact_label = label
+    query = "MATCH (a:" + label + ")-[r:SOCIAL]-(b:" + contact_label + ") WHERE a.id=" + str(node_a) + " RETURN r, b"
+    while True:
+        try:
+            results = tx.run(query).values()
+            break
+        except TransientError:
+            pass
     return [res[0] for res in results]
 
 
@@ -108,21 +186,26 @@ def colocated(tx, agent):
 
     :return: List of co-located agents
     """
-    results = tx.run("MATCH (m:Agent)-[s:LOCATED]->(n:Node) "
-                     "WITH n "
-                     "WHERE m.id={agent} "
-                     "MATCH (a:Agent)-[s:LOCATED]->(n:Node) "
-                     "RETURN a", agent=agent).values()
+    while True:
+        try:
+            results = tx.run("MATCH (m:Agent)-[s:LOCATED]->(n:Node) "
+                             "WITH n "
+                             "WHERE m.id={agent} "
+                             "MATCH (a:Agent)-[s:LOCATED]->(n:Node) "
+                             "RETURN a", agent=agent).values()
+            break
+        except TransientError:
+            pass
     results = [res[0] for res in results]
     return results
 
 
-def getnode(tx, nodeid, label=None, uid=None):
+def getnode(tx, node_id, label=None, uid=None):
     """
-    Returns the details of a given node
+    Returns a given node
 
     :param tx: neo4j read or write transaction
-    :param nodeid: id for wanted node
+    :param node_id: id for wanted node
     :param label: node label
     :param uid: type of id
 
@@ -132,29 +215,49 @@ def getnode(tx, nodeid, label=None, uid=None):
         uid = "id"
     if label == "Agent":
         query = "MATCH (n:Agent) ""WHERE n." + uid + " = {id} ""RETURN n"
-        results = tx.run(query, id=nodeid, lab=label).values()
+        while True:
+            try:
+                results = tx.run(query, id=node_id, lab=label).values()
+                break
+            except TransientError:
+                pass
     elif label:
         query = "MATCH (n:" + label + ") ""WHERE n." + uid + " = {id} ""RETURN n"
-        results = tx.run(query, id=nodeid).values()
+        while True:
+            try:
+                results = tx.run(query, id=node_id).values()
+                break
+            except TransientError:
+                pass
     else:
         query = "MATCH (n) ""WHERE n." + uid + " = {id} ""RETURN n"
-        results = tx.run(query, id=nodeid).values()
+        while True:
+            try:
+                results = tx.run(query, id=node_id).values()
+                break
+            except TransientError:
+                pass
     node = results[0][0]
     return node
 
 
-def getnodeagents(tx, nodeid, uid="name"):
+def getnodeagents(tx, node_id, uid="name"):
     """
     Finds all agents currently located at a node
 
     :param tx: neo4j read or write transaction
-    :param nodeid: id of node
+    :param node_id: id of node
     :param uid: type of id node uses
 
     :return: List of agents at node
     """
-    query = "MATCH (a)-[r:LOCATED]->(n) ""WHERE n." + uid + " ={id} ""RETURN a"
-    results = tx.run(query, id=nodeid).values()
+    query = "MATCH (a)-[r:LOCATED]->(n) ""WHERE n." + uid + " = '" + str(node_id) + "' RETURN a"
+    while True:
+        try:
+            results = tx.run(query).values()
+            break
+        except TransientError:
+            pass
     results = [res[0] for res in results]
     return results
 
@@ -173,11 +276,18 @@ def getnodevalue(tx, node, value, label=None, uid=None):
     """
     if not uid:
         uid = "id"
+    elif uid == "name":
+        node = "'" + node + "'"
     if label:
-        query = "MATCH (a:" + label + ") ""WHERE a." + uid + "=" + str(node) + " ""RETURN a." + value
+        query = "MATCH (a:" + label + ") ""WHERE a." + uid + " = " + str(node) + " ""RETURN a." + value
     else:
-        query = "MATCH (a:Node) ""WHERE a." + uid + "=" + str(node) + " ""RETURN a." + value
-    results = tx.run(query, node=node).value()
+        query = "MATCH (a:Node) ""WHERE a." + uid + " = " + str(node) + " ""RETURN a." + value
+    while True:
+        try:
+            results = tx.run(query).value()
+            break
+        except TransientError:
+            pass
     return results[0]
 
 
@@ -190,7 +300,11 @@ def getrunname(tx):
     :return: run name string
     """
     query = "MATCH (a:Tag) ""RETURN a.tag"
-    return tx.run(query).value()[0]
+    while True:
+        try:
+            return tx.run(query).value()[0]
+        except TransientError:
+            pass
 
 
 def gettime(tx):
@@ -202,7 +316,13 @@ def gettime(tx):
     :return: Current time on clock
     """
     query = "MATCH (a:Clock) ""RETURN a.time"
-    return tx.run(query).value()[0]
+    while True:
+        try:
+            results = tx.run(query).value()[0]
+            break
+        except TransientError:
+            pass
+    return results
 
 
 def tick(tx):
@@ -215,12 +335,16 @@ def tick(tx):
     """
     time = 1 + gettime(tx)
     query = "MATCH (a:Clock) ""SET a.time={time} "
-    return tx.run(query, time=time)
+    while True:
+        try:
+            return tx.run(query, time=time)
+        except TransientError:
+            pass
 
 
 def shortestpath(tx, node_a, node_b, node_label, edge_label, directed=False):
     """
-    Returns the length of the shortest path between two nodes
+    Returns the length of the shortest path between two nodes, using edges of the type given in edge_label
 
     :param tx: neo4j read or write transaction
     :param node_a: first node id
@@ -238,8 +362,14 @@ def shortestpath(tx, node_a, node_b, node_label, edge_label, directed=False):
     query = "MATCH (a) WHERE a.id=" + str(node_a) + " WITH a MATCH (b) WHERE b.id=" + str(node_b) + " WITH a, b "
     query = query + "CALL algo.shortestPath(a, b,null, {relationshipQuery:'" + edge_label
     query = query + "', direction: '" + directionality + "'}) YIELD totalCost RETURN totalCost"
-    sp = tx.run(query).values()[0]
-    return sp[0]
+    while True:
+        try:
+            sp = tx.run(query).values()
+            break
+        except TransientError:
+            pass
+    if sp:
+        return sp[0][0]
 
 
 def updateedge(tx, edge, attr, value, uid=None):
@@ -260,7 +390,12 @@ def updateedge(tx, edge, attr, value, uid=None):
     end = edge.end_node
     query = "MATCH (a:Node)-[r:REACHES]->(b:Node) ""WHERE a." + uid + "={start} AND b." + uid + \
             "={end} ""SET r." + attr + "={val}"
-    tx.run(query, start=start[uid], end=end[uid], val=value)
+    while True:
+        try:
+            tx.run(query, start=start[uid], end=end[uid], val=value)
+            break
+        except TransientError:
+            pass
 
 
 def updatenode(tx, node, attr, value, uid=None, label=None):
@@ -281,12 +416,17 @@ def updatenode(tx, node, attr, value, uid=None, label=None):
     if not label:
         label = "Node"
     query = "MATCH (a:" + label + ") ""WHERE a." + uid + "={node} ""SET a." + attr + "={value}"
-    tx.run(query, node=node, value=value)
+    while True:
+        try:
+            tx.run(query, node=node, value=value)
+            break
+        except TransientError:
+            pass
 
 
 def updateagent(tx, node, attr, value, uid=None):
     """
-    Update and agents attribute value.
+    Update an agents attribute value.
 
     :param tx: neo4j write transaction
     :param node: node id
@@ -299,12 +439,17 @@ def updateagent(tx, node, attr, value, uid=None):
     if not uid:
         uid = "id"
     query = "MATCH (a:Agent) ""WHERE a." + uid + "={node} ""SET a." + attr + "={value}"
-    tx.run(query, node=node, value=value)
+    while True:
+        try:
+            tx.run(query, node=node, value=value)
+            break
+        except TransientError:
+            pass
 
 
 def deleteagent(tx, agent, uid=None):
     """
-    Delete an agent and it's location in database
+    Delete an agent and all its relationships in the database
 
     :param tx: neo4j write transaction
     :param agent: agent id
@@ -314,13 +459,17 @@ def deleteagent(tx, agent, uid=None):
     """
     if not uid:
         uid = "id"
-    tx.run("MATCH (n:Agent)-[r:LOCATED]->() ""WHERE n." + uid + "={ID} ""DELETE r", ID=agent[uid])
-    tx.run("MATCH (n:Agent) ""WHERE n." + uid + "={ID} ""DELETE n", ID=agent[uid])
+    while True:
+        try:
+            tx.run("MATCH (n:Agent) ""WHERE n." + uid + "={ID} ""DETACH DELETE n", ID=agent[uid])
+            break
+        except TransientError:
+            pass
 
 
 def addagent(tx, node, label, params, uid=None):
     """
-    Insert a new agent into the system
+    Insert a new agent into the system at node
 
     :param tx: neo4j write transaction
     :param node: node to locate agent at
@@ -332,7 +481,7 @@ def addagent(tx, node, label, params, uid=None):
     """
     if not uid:
         uid = "id"
-    query = "MATCH (n: " + label + ") ""WITH n ""ORDER BY n.id DESC ""RETURN n.id"
+    query = "MATCH (n:Agent) ""WITH n ""ORDER BY n.id DESC ""RETURN n.id"
     highest_id = tx.run(query).values()
     if highest_id:
         agent_id = highest_id[0][0] + 1
@@ -342,12 +491,18 @@ def addagent(tx, node, label, params, uid=None):
     for param in params:
         query = query + ", " + param + ":" + str(params[param])
     query = query + "})-[r:LOCATED]->(n)"
-    tx.run("MATCH (n:Node) ""WHERE n." + uid + "= '" + node[uid] + "' " + query)
+    while True:
+        try:
+            tx.run("MATCH (n:Node) ""WHERE n." + uid + "= '" + node[uid] + "' " + query)
+            break
+        except TransientError:
+            pass
 
 
 def createedge(tx, node_a, node_b, label_a, label_b, edge_label, parameters=None):
     """
-    Adds and edge between to nodes with attributes and label as given
+    Adds and edge between two nodes with attributes and label as given
+
     :param tx: neo4j write transaction
     :param node_a: source node id
     :param node_b: target node id
@@ -358,12 +513,71 @@ def createedge(tx, node_a, node_b, label_a, label_b, edge_label, parameters=None
 
     :return: None
     """
-    query = "MATCH (a:" + label_a + ") WHERE a.id=" + str(node_a) + " WITH a MATCH (b:" + label_b + ") " \
-                                                                                                    "WHERE b.id=" + str(
-        node_b) + " " \
-                  "WITH a, b " \
-                  "CREATE (a)-[n:" + edge_label
+    query = "MATCH (a:" + label_a + ") WHERE a.id=" + str(node_a) + " WITH a MATCH (b:" + label_b + ") WHERE b.id=" \
+            + str(node_b) + " WITH a, b CREATE (a)-[n:" + edge_label
     if parameters:
         query = query + " {" + str(parameters) + "}"
     query = query + "]->(b) "
-    tx.run(query)
+    while True:
+        try:
+            tx.run(query)
+            break
+        except TransientError:
+            pass
+
+
+def shortestsocialpath(tx, node_id, agent_id, agent_label=None, node_label=None):
+    """
+    Returns shortest path using social links from an agent to agents located at a given node
+
+    :param node_id: node target agents must be located at
+    :param agent_id: id of source agent
+    :param agent_label: type of source agent
+    :param node_label: type of target node
+
+    :return:
+    """
+    agents = getnodeagents(tx, node_id, "name")
+    paths = [shortestpath(tx, agent_id, ag, edge_label="SOCIAL") for ag in agents]
+    if paths:
+        return min(paths)
+    else:
+        return float('inf')
+
+
+def addlabelnode(tx, node_id, label):
+    """
+    Add database label to an existing node, nodes only not agents
+
+    :param tx: neo4j write transaction
+    :param node_id: name of node to be updated
+    :param label: new label to be added, must be in CamelCase
+
+    :return: None
+    """
+    query = "MATCH (a:Node) WITH a.name=" + node_id + " SET a :" + label
+    while True:
+        try:
+            tx.run(query)
+            break
+        except TransientError:
+            pass
+
+
+def addlabelagent(tx, agent_id, label):
+    """
+    Add extra label to an agent in the database
+
+    :param tx: neo4j write transaction
+    :param agent_id: id number of agent to update
+    :param label: new label to be added, must be in CamelCase
+
+    :return: None
+    """
+    query = "MATCH (a:Agent) WITH a.id=" + agent_id + " SET a :" + label
+    while True:
+        try:
+            tx.run(query)
+            break
+        except TransientError:
+            pass

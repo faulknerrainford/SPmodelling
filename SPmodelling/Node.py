@@ -51,10 +51,18 @@ class Node(ABC):
                     if ag["id"] in self.queue[clock].keys():
                         agper = self.agentperception(tx, ag, self.queue[clock][ag["id"]][0],
                                                      self.queue[clock][ag["id"]])
-                        specification.Agent(ag["id"]).move(tx, agper)
+                        for label in intf.checknodelabel(tx, ag["id"], "id"):
+                            if label in specification.agentclasses.keys():
+                                Agclass = specification.agentclasses[label]
+                                agclass = Agclass(ag["id"])
+                                agclass.move(tx, agper)
             else:
                 agper = self.agentperception(tx, ag)
-                specification.Agent(ag["id"]).move(tx, agper)
+                for label in intf.checknodelabel(tx, ag["id"], "id"):
+                    if label in specification.agentclasses.keys():
+                        Agclass = specification.agentclasses[label]
+                        agclass = Agclass(ag["id"])
+                        agclass.move(tx, agper)
         if self.queue and clock in self.queue.keys():
             del self.queue[clock]
 

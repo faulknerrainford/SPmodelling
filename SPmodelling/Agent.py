@@ -97,10 +97,9 @@ class MobileAgent(ABC):
                 tx.run("MATCH (n:Agent)-[r:LOCATED]->() "
                        "WHERE n.id = {id} "
                        "DELETE r", id=self.id)
-                new = self.choice.end_node[self.nuid]
+                new = self.choice.end_node["name"]
                 tx.run("MATCH (n:Agent), (a:Node) "
-                       "WHERE n.id={id} AND a." + self.nuid + "={new} "
-                                                              "CREATE (n)-[r:LOCATED]->(a)", id=self.id, new=new)
+                       "WHERE n.id={id} AND a.name='" + new + "' CREATE (n)-[r:LOCATED]->(a)", id=self.id, new=new)
                 self.learn(tx, self.choice)
                 return new
 
@@ -126,11 +125,11 @@ class CommunicativeAgent(ABC):
 
         :return: None
         """
-        self.look(tx)
-        self.update(tx)
-        self.talk(tx)
-        self.listen(tx)
-        self.react(tx)
+        if not self.look(tx):
+            self.update(tx)
+            self.talk(tx)
+            self.listen(tx)
+            self.react(tx)
 
     @abstractmethod
     def look(self, tx):

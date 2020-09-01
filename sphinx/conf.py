@@ -59,3 +59,5 @@ latex_elements = {}
 latex_documents = [
     (master_doc, 'SPmodelling.tex', u' Socio-Physical Modelling', u'Penny Faulkner Rainford', 'manual'),
 ]
+
+autodoc_mock_imports = ["SPmodelling", "FallModel"]
