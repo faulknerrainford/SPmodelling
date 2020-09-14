@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 import SPmodelling.Interface as intf
+import specification
 
 
 class MobileAgent(ABC):
@@ -14,6 +15,8 @@ class MobileAgent(ABC):
         self.params = params
         self.choice = None
         self.nuid = nuid
+        self.services = None
+        self.core_operations = "default"
 
     @abstractmethod
     def generator(self, tx, params):
@@ -29,7 +32,7 @@ class MobileAgent(ABC):
         pass
 
     @abstractmethod
-    def perception(self, tx, perc):
+    def move_perception(self, tx, perc):
         """
         Subclass must implement this class to perform the Agents filtering to remove options the agent considers not
         possible for it. The agent will then reset the agent view to the filtered version.
@@ -42,7 +45,7 @@ class MobileAgent(ABC):
         self.view = perc
 
     @abstractmethod
-    def choose(self, tx, perc):
+    def move_choose(self, tx, perc):
         """
         Subclass must implement this function to make a choice between all possible options after node and agent filtering
         This class calls the agent perception function so super call must be made at start of funciton.
@@ -52,10 +55,10 @@ class MobileAgent(ABC):
 
         :return: None
         """
-        self.perception(tx, perc)
+        self.move_perception(tx, perc)
 
     @abstractmethod
-    def learn(self, tx, choice):
+    def move_learn(self, tx, choice, service):
         """
         Subclass must implement this function to make changes to the agent and node after moving.
 
@@ -68,7 +71,7 @@ class MobileAgent(ABC):
         # uses interface to update network based on choice
 
     @abstractmethod
-    def payment(self, tx):
+    def move_payment(self, tx):
         """
         Subclass must implement this function to make changes to the agent, edges and nodes before/during movement.
         Including paying any cost of the movement.
@@ -78,6 +81,15 @@ class MobileAgent(ABC):
         :return: None
         """
         return None
+
+    def move_services(self, tx):
+        node_class = specification.Nodeclasses[self.choice.end_node["name"]]
+        node = node_class(self.choice.end_node["name"])
+        services = node.available_services(tx)
+        if services:
+            return services
+        else:
+            return None
 
     def move(self, tx, perc):
         """
@@ -90,9 +102,9 @@ class MobileAgent(ABC):
 
         :return: If agent moves return the new local node
         """
-        self.choice = self.choose(tx, perc)
+        self.choice = self.move_choose(tx, perc)
         if self.choice:
-            if self.payment(tx):
+            if self.move_payment(tx):
                 # Move node based on choice using tx
                 tx.run("MATCH (n:Agent)-[r:LOCATED]->() "
                        "WHERE n.id = {id} "
@@ -100,7 +112,8 @@ class MobileAgent(ABC):
                 new = self.choice.end_node["name"]
                 tx.run("MATCH (n:Agent), (a:Node) "
                        "WHERE n.id={id} AND a.name='" + new + "' CREATE (n)-[r:LOCATED]->(a)", id=self.id, new=new)
-                self.learn(tx, self.choice)
+                service = self.move_services(tx)
+                self.move_learn(tx, self.choice, service)
                 return new
 
 
@@ -125,14 +138,14 @@ class CommunicativeAgent(ABC):
 
         :return: None
         """
-        if not self.look(tx):
-            self.update(tx)
-            self.talk(tx)
-            self.listen(tx)
-            self.react(tx)
+        if not self.social_perception(tx):
+            self.social_update(tx)
+            self.social_talk(tx)
+            self.social_listen(tx)
+            self.social_react(tx)
 
     @abstractmethod
-    def look(self, tx):
+    def social_perception(self, tx):
         """
         The subclass should implement this function to allow the agent to detect other entities in its social network.
         Can also be used to detect agents colocated with it in a physical network.
@@ -144,7 +157,7 @@ class CommunicativeAgent(ABC):
         return None
 
     @abstractmethod
-    def update(self, tx):
+    def social_update(self, tx):
         """
         The subclass should implement this function to allow the agent to update it's own values based on it's local
         social network and colocated agents in physical networks.
@@ -156,7 +169,7 @@ class CommunicativeAgent(ABC):
         return None
 
     @abstractmethod
-    def talk(self, tx):
+    def social_talk(self, tx):
         """
         The subclass should implement this function to allow agents to form new social connections possibly through
         existing connections or co-location.
@@ -168,7 +181,7 @@ class CommunicativeAgent(ABC):
         return None
 
     @abstractmethod
-    def listen(self, tx):
+    def social_listen(self, tx):
         """
         The subclass should implement this function to allow agents to change their values or form new connections based
         on the situation after talking.
@@ -180,7 +193,7 @@ class CommunicativeAgent(ABC):
         return None
 
     @abstractmethod
-    def react(self, tx):
+    def social_react(self, tx):
         """
         The subclass should implement this function. The agent has a final opportunity to adjust its values and manage
         its social network. This includes managing the number of social links.

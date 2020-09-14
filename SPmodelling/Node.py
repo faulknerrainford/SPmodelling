@@ -8,7 +8,7 @@ class Node(ABC):
     Node class implements physical node locations
     """
 
-    def __init__(self, name, capacity=None, duration=None, queue=None, nuid="name"):
+    def __init__(self, name, capacity=None, duration=None, queue=None, nuid="name", classname=None):
         """
         Sets name of the node and other properties.
 
@@ -23,6 +23,10 @@ class Node(ABC):
         self.duration = duration
         self.queue = queue
         self.nuid = nuid
+        self.classname = classname
+
+    def available_services(self, tx):
+        return intf.check_services_location(tx, (self.name, "Node", "name"))
 
     @abstractmethod
     def agentsready(self, tx):

@@ -581,3 +581,10 @@ def addlabelagent(tx, agent_id, label):
             break
         except TransientError:
             pass
+
+
+def check_services_location(tx, node):
+    node_id, node_label, node_uid = tuple(node)
+    query = "MATCH (s)-[r:PROVIDE]->(n" + node_label + ") WHERE n." + node_uid + "=" + str(node_id) + "RETURN s"
+    res = tx.run(query).values()
+    return [(s, s["name"], "Service", "name") for s in res]
