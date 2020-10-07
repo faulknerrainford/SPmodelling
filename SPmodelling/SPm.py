@@ -5,7 +5,7 @@ print("finished spm imports")
 
 
 # noinspection PyRedundantParentheses
-def main(runs, length, population, modules=None):
+def main(runs, length, population, modules=None, reset=True):
     """
     This function takes the number of runs required, the time-step length of each run and the size of population and
     runs a SPmodel based on the local specification file. It saves all output to a run name as defined by the parameters
@@ -21,8 +21,9 @@ def main(runs, length, population, modules=None):
     :return: None
     """
     for i in range(runs):
-        SPmodelling.Reset.main(i, population, length)
-        print("Finished Reset")
+        if reset:
+            SPmodelling.Reset.main(i, population, length)
+            print("Finished Reset")
         if modules:
             q = Queue()
             current_processes = []
@@ -54,6 +55,11 @@ def main(runs, length, population, modules=None):
                 social1 = Process(target=SPmodelling.Social.main, args=(length, i))
                 social1.start()
                 current_processes.append(social1)
+            if "Cluster" in modules:
+                print("Executing Cluster")
+                inter4 = Process(target=SPmodelling.Cluster.main, args=tuple([length]))
+                inter4.start()
+                current_processes.append(inter4)
             [pro.join() for pro in current_processes]
 
     print("Main thread exit")

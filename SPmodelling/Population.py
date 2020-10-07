@@ -5,7 +5,7 @@ import specification as specification
 from abc import ABC, abstractmethod
 
 
-class Population(SPmodelling.Intervenor, ABC):
+class Population(SPmodelling.Intervenor.Intervenor):
 
     def __init__(self):
         super(Population, self).__init__(self)

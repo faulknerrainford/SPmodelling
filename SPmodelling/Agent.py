@@ -1,6 +1,50 @@
 from abc import ABC, abstractmethod
 import SPmodelling.Interface as intf
-import specification
+
+
+def filter_resource(tx, agent, edges, resource_edge, resource_agent):
+    """
+    Filters a set of edges and end nodes based on a resource.
+
+    :param tx: neo4j database read transaction
+    :param agent: list of agent id, label and id type
+    :param edges: list of edges
+    :param resource_edge: name of resource cost on edges
+    :param resource_agent: name of resource contained in agent
+
+    :return: list of edges for which agent has sufficient resources
+    """
+    agent, agent_label, agent_uid = tuple(agent)
+    valid_edges = []
+    current_resources = intf.get_node_value(tx, [agent, agent_label, agent_uid], resource_agent)
+    if len(edges) > 1:
+        for edge in edges:
+            cost = 0
+            if edge.end_node[resource_edge]:
+                cost = cost + edge.end_node[resource_edge]
+            if edge[resource_edge]:
+                cost = cost + edge[resource_edge]
+            if current_resources > -cost:
+                valid_edges = valid_edges + [edge]
+    else:
+        valid_edges = edges
+    return valid_edges
+
+
+def filter_threshold(tx, agent, edges, resource_edge, resource_agent):
+    threshold = intf.get_node_value(tx, agent, resource_agent)
+    if len(edges) < 2:
+        if type(edges) == list and edges:
+            choice = edges[0]
+        else:
+            choice = edges
+        return choice
+    else:
+        options = []
+        for edge in edges:
+            if edge[resource_edge] <= threshold:
+                options = options + [edge]
+        return options
 
 
 class MobileAgent(ABC):
@@ -83,6 +127,7 @@ class MobileAgent(ABC):
         return None
 
     def move_services(self, tx):
+        import specification
         node_class = specification.Nodeclasses[self.choice.end_node["name"]]
         node = node_class(self.choice.end_node["name"])
         services = node.available_services(tx)

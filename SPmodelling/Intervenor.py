@@ -7,9 +7,9 @@ class Intervenor(ABC):
         pass
 
     @abstractmethod
-    def check(self):
+    def check(self, tx):
         pass
 
     @abstractmethod
-    def apply_change(self):
+    def apply_change(self, tx):
         pass

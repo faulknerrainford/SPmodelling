@@ -25,7 +25,7 @@ class Reset(ABC):
         import specification
         tag = specification.specname + "_" + self.reset_name + "_" + str(pop_size) + "_" + str(run_length) + "_" + str(
             run_number)
-        tx.run("CREATE (a:Tag {tag:{tag}})", tag=tag)
+        tx.run("CREATE (a:Tag {tag:$tag})", tag=tag)
         print("set output")
 
     @staticmethod
@@ -113,5 +113,6 @@ def main(rn, ps, rl):
         ses.write_transaction(reset.set_clock)
         ses.write_transaction(reset.set_nodes)
         ses.write_transaction(reset.set_edges)
+        ses.write_transaction(reset.set_service)
         ses.write_transaction(reset.generate_population, ps)
     dri.close()

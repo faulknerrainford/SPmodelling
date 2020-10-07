@@ -1,11 +1,11 @@
 from neo4j import GraphDatabase
 from abc import ABC, abstractmethod
-import specification
+# import specification
 import SPmodelling.Interface as intf
 import SPmodelling.Intervenor
 
 
-class Balancer(SPmodelling.Intervenor, ABC):
+class Balancer(SPmodelling.Intervenor.Intervenor):
     """
     Class to implement modifications to edges and nodes with out changing the structure of the network. This should be
     based on the movement and behaviours of the agent population or on events in the system.
