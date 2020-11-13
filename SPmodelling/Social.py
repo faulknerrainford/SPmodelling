@@ -18,19 +18,16 @@ def main(rl, rn):
     with dri.session() as ses:
         clock = 0
         while clock < rl:
-            tx = ses.begin_transaction()
-            agents = tx.run("MATCH (a:Agent) "
-                            "RETURN a.id").values()
-            agents = [agent[0] for agent in agents]
+            agents = ses.read_transaction(intf.get_agents, "Agent")
+            agents = [(agent[0], "Agent", "id") for agent in agents]
             for agent in agents:
-                if labels := intf.checknodelabel(tx, agent, "id"):
+                if labels := ses.read_transaction(intf.check_node_label, agent):
                     for label in labels:
-                        if label in specification.agentclasses.keys():
-                            Agclass = specification.agentclasses[label]
-                            agclass = Agclass(agent)
-                            agclass.socialise(tx)
-            clock = intf.gettime(tx)
+                        if label in specification.AgentClasses.keys():
+                            Agclass = specification.AgentClasses[label]
+                            agclass = Agclass(agent[0])
+                            ses.write_transaction(agclass.socialise)
+            clock = ses.read_transaction(intf.get_time)
             print("T: " + clock.__str__())
-            tx.close()
     dri.close()
     print("Social closed")

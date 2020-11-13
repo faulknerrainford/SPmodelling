@@ -9,7 +9,7 @@ class Reset(ABC):
     """
 
     def __init__(self, reset_tag):
-        self.reset_name = reset_tag
+        self.reset_name = reset_tag      
 
     def set_output(self, tx, run_number, pop_size, run_length):
         """

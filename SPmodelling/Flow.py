@@ -24,10 +24,10 @@ def main(rl, rn):
         clock = 0
         while clock < rl:
             for node in specification.nodes:
-                ses.write_transaction(node.agentsready)
-            clock = ses.write_transaction(intf.gettime)
+                ses.write_transaction(node.agents_ready)
             ses.write_transaction(intf.tick)
-            print("T: " + clock.__str__())
+            clock = ses.write_transaction(intf.get_time)
+            print("post Tick: " + clock.__str__())
         # ses.write_transaction(activeagentsave, nodes[1:], intf, runname)
     dri.close()
     print("Flow closed")

@@ -50,9 +50,9 @@ class Monitor(ABC):
         return False
 
     @abstractmethod
-    def close(self, txl):
+    def monitor_close(self, txl):
         """
-        Subclass must implement to save out data and graphs for analysis
+        subclass must implement to save out data and graphs for analysis
 
         :param txl: neo4j read or write transaction
 
@@ -87,6 +87,6 @@ def main(rl):
     driver = GraphDatabase.driver(specification.database_uri, auth=specification.Monitor_auth,
                                   max_connection_lifetime=2000)
     with driver.session() as session:
-        session.write_transaction(monitor.close)
+        session.write_transaction(monitor.monitor_close)
     driver.close()
     print("Monitor closed")

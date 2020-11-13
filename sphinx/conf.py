@@ -30,8 +30,16 @@ release = '1.1.0a'
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = ['sphinx.ext.autodoc',
-              'sphinx.ext.githubpages'
+              'sphinx.ext.githubpages',
+              'sphinx.ext.mathjax',
+              'sphinx.ext.viewcode',
+              'numpydoc',
+              'sphinx.ext.autosummary',
+              'sphinx.ext.doctest',
+              'sphinx.ext.inheritance_diagram'
               ]
+
+autosummary_generate = False
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -49,7 +57,11 @@ exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 # a list of builtin themes.
 #
 html_theme = 'classic'
-
+html_theme_options = {
+    "stickysidebar": "true",
+    "externalrefs": "true"
+}
+html_logo = 'UoHlogo_white.png'
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
@@ -60,4 +72,6 @@ latex_documents = [
     (master_doc, 'SPmodelling.tex', u' Socio-Physical Modelling', u'Penny Faulkner Rainford', 'manual'),
 ]
 
-autodoc_mock_imports = ["SPmodelling", "FallModel"]
+autodoc_mock_imports = ["SPmodelling", "FallModel", "specification", "matplotlib"]
+
+

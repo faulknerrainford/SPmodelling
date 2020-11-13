@@ -1,12 +1,15 @@
-from neobolt.exceptions import TransientError
+from neobolt.exceptions import TransientError, CypherTypeError
+"""
+Module for interacting with cypher databases. Uses node and agent id's in the form of tuples: (id, label, id_type)
+"""
 
 
 def perception(tx, agent):
     """
-    Provides the local environment for the given agent
+    Provides the local physical environment of available outgoing "REACHES" edges for the given agent
 
-    :param tx: write transaction for neo4j database
-    :param agent: id number for agent
+    :param tx: neo4j database write transaction
+    :param agent: agent id tuple
 
     :return: Node the agent is located at followed by the outgoing edges of that node and those edges end nodes.
     """
@@ -33,16 +36,15 @@ def locate_agent(tx, agent):
     Finds which node the given agent is currently located at.
 
     :param tx: read or write transaction for neo4j database
-    :param agent: agent id number
+    :param agent: agent id tuple
 
-    :return: Node the agent is currently located at
+    :return: Node object the agent is currently located at
     """
     agent_id, agent_label, agent_uid = tuple(agent)
+    query = "MATCH (m:Agent)-[s:LOCATED]->(n:Node) WHERE m.id=" + str(agent_id) + " RETURN n"
     while True:
         try:
-            results = tx.run("MATCH (m:Agent)-[s:LOCATED]->(n:Node) "
-                             "WHERE m.id=$agent "
-                             "RETURN n", agent=agent_id).values()
+            results = tx.run(query).values()
             break
         except TransientError:
             pass
@@ -54,8 +56,8 @@ def update_contact_edge(tx, node_a, node_b, attribute, value):
     Update a value on a SOCIAL edge based on the nodes at each end.
 
     :param tx: write transaction for neo4j database
-    :param node_a: id of first node
-    :param node_b: id of second node
+    :param node_a: id tuple of source node
+    :param node_b: id tuple of target node
     :param attribute: attribute to be updated
     :param value: new value of attribute
 
@@ -85,7 +87,7 @@ def check_node_label(tx, node):
     Return node to check labels of node based on its id, need to provide the type of unique id
 
     :param tx: read or write transaction for neo4j database
-    :param node: unique identifier for node
+    :param node: node id tuple
 
     :return: neo4j node object
     """
@@ -109,8 +111,8 @@ def delete_contact(tx, node_a, node_b, contact_type='SOCIAL'):
     Deletes a contact edge in the database.
 
     :param tx: neo4j write transaction
-    :param node_a: id, label and id type of source node
-    :param node_b: id, label and id type of target node
+    :param node_a: source node id tuple
+    :param node_b: target node id tuple
     :param contact_type: label of relationship
 
     :return: None
@@ -135,7 +137,7 @@ def agent_relationships(tx, node, rel_type, directed=False):
     Returns outgoing contact edges from a node
 
     :param tx: neo4j read or write transaction
-    :param node: source node id, label and id type
+    :param node: source node id tuple
     :param rel_type: type of relationship to look for
     :param directed: if the relationship should be considered directed or undirected
 
@@ -161,23 +163,30 @@ def agent_contacts(tx, node_a, contact_label=None):
     Returns outgoing contact edges from a node
 
     :param tx: neo4j read or write transaction
-    :param node_a: source node id, label and id type
+    :param node_a: source node id tuple
     :param contact_label: type of out going relationship
 
     :return: relationships and end nodes
     """
     node_a, label_a, uid_a = tuple(node_a)
     if not contact_label:
-        contact_label = label_a
-    query = "MATCH (a:" + label_a + ")-[r:SOCIAL]-(b:" + contact_label + ") WHERE a." + uid_a + "=" + str(node_a) \
-            + " RETURN r, b"
+        contact_label = "SOCIAL"
+    query = "MATCH (a:" + label_a + ")-[r:" + contact_label + "]-(b) WHERE a." + uid_a + "=" + str(node_a) \
+            + " RETURN *"
     while True:
         try:
-            results = tx.run(query).values()
+            res = tx.run(query).values()
             break
         except TransientError:
             pass
-    return [res[0] for res in results]
+    res = [contact[2] for contact in res]
+    results = []
+    for contact in res:
+        if contact.end_node["id"] == node_a:
+            results.append([contact, contact.start_node["id"]])
+        else:
+            results.append([contact, contact.end_node["id"]])
+    return results
 
 
 def co_located(tx, agent):
@@ -185,7 +194,7 @@ def co_located(tx, agent):
     Find agents at the same physical node as the given agent
 
     :param tx: neo4j read or write transaction
-    :param agent: agent id, label and id type
+    :param agent: agent id tuple
 
     :return: List of co-located agents
     """
@@ -196,7 +205,7 @@ def co_located(tx, agent):
                              "WITH n "
                              "WHERE m." + agent_uid + "=$agent "
                              "MATCH (a:Agent)-[s:LOCATED]->(n:Node) "
-                             "RETURN a", agent=agent_id).values()
+                             "RETURN a.id", agent=agent_id).values()
             break
         except TransientError:
             pass
@@ -209,7 +218,7 @@ def get_node(tx, node):
     Returns a given node
 
     :param tx: neo4j read or write transaction
-    :param node: node id, label and id type
+    :param node: node id tuple
 
     :return: Node object
     """
@@ -249,9 +258,9 @@ def get_node_agents(tx, node):
     Finds all agents currently located at a node
 
     :param tx: neo4j read or write transaction
-    :param node
+    :param node: node id tuple
 
-    :return: List of agents at node
+    :return: List of agent tuples for agents at node
     """
     node_id, node_label, uid = tuple(node)
     query = "MATCH (a)-[r:LOCATED]->(n) ""WHERE n." + uid + " = '" + str(node_id) + "' RETURN a.id"
@@ -270,7 +279,7 @@ def get_node_value(tx, node, value):
     Retrieves a particular value from a node
 
     :param tx: neo4j read or write transaction
-    :param node: id, label and type of id of the node
+    :param node: node id tuple
     :param value: attribute to return
 
     :return: value of attribute asked for
@@ -290,7 +299,8 @@ def get_node_value(tx, node, value):
             break
         except TransientError:
             pass
-    return results[0]
+    if results:
+        return results[0]
 
 
 def get_run_name(tx):
@@ -307,6 +317,18 @@ def get_run_name(tx):
             return tx.run(query).value()[0]
         except TransientError:
             pass
+
+
+def get_pop_size(tx):
+    run_name = get_run_name(tx)
+    parts = run_name.split('_')
+    return int(parts[2])
+
+
+def get_run_length(tx):
+    run_name = get_run_name(tx)
+    parts = run_name.split('_')
+    return int(parts[3])
 
 
 def get_time(tx):
@@ -349,35 +371,37 @@ def shortest_path(tx, node_a, node_b, edge_label, directed=False):
     Returns the length of the shortest path between two nodes, using edges of the type given in edge_label
 
     :param tx: neo4j read or write transaction
-    :param node_a: first node id
-    :param node_b: second node id
+    :param node_a: first node id tuple
+    :param node_b: second node id tuple
     :param edge_label: label for the type of relationships to use in path
     :param directed: whether to consider direction of path in calculations
 
     :return: Length of shortest path between two nodes
     """
-    # TODO: set up graph
     node_a, label_a, uid_a = tuple(node_a)
     node_b, label_b, uid_b = tuple(node_b)
     if directed:
-        directionality = 'OUTGOING'
+        directionality = 'DIRECTED'
     else:
-        directionality = 'BOTH'
-    query = "MATCH (a) WHERE a." + uid_a + "=" + str(node_a) + " WITH a MATCH (b) WHERE b." + uid_b + "=" \
-            + str(node_b) + " WITH a, b "
-    query = query + "CALL gds.alpha.shortestPath.stream(a, b,null, {relationshipQuery:'" + edge_label
-    query = query + "', direction: '" + directionality + "'}) YIELD totalCost RETURN totalCost"
+        directionality = 'UNDIRECTED'
+    query = "MATCH(start: " + label_a + "{" + uid_a + ": " + str(node_a) + "}), (end:" + label_b \
+            + " {" + uid_b + ":" + str(node_b) \
+            + "}) CALL gds.alpha.shortestPath.stream({nodeProjection: '" + label_a \
+            + "', relationshipProjection: {SOCIAL: {type: '" + edge_label \
+            + "', orientation: '" + directionality + "'}}, startNode: start, endNode: end}) YIELD nodeId, cost " \
+                                                     "RETURN gds.util.asNode(nodeId).id AS name, cost"
     while True:
         try:
-            sp = tx.run(query).values()
+            sp = tx.run(query)
+            sp = sp.values()
             break
         except TransientError:
             pass
     if sp:
-        return sp[0][0]
+        return sp[-1][-1]
 
 
-def update_edge(tx, edge, attr, value, uid=None):
+def update_edge(tx, edge, attr, value, edge_label="REACHES"):
     """
     Modify an attribute of an edge
 
@@ -385,29 +409,24 @@ def update_edge(tx, edge, attr, value, uid=None):
     :param edge: relationship object
     :param attr: attribute to modify
     :param value: new value of attribute
-    :param uid: type of id used in system
+    :param edge_label: label of relationship
 
     :return: None
     """
-    if isinstance(edge,list):
-        start, start_label, start_uid = tuple(edge[0])
-        end, end_label, end_uid = tuple(edge[1])
-    else:
-        if not uid:
-            start_uid = "id"
-            end_uid = "id"
-        else:
-            start_uid = uid
-            end_uid = uid
-        start_label = "Node"
-        end_label = "Node"
-        start = edge.start_node[uid]
-        end = edge.end_node[uid]
-    query = "MATCH (a:" + start_label + ")-[r:REACHES]->(b:" + end_label + ") ""WHERE a." + start_uid \
-            + "=$start AND b." + end_uid + "=$end ""SET r." + attr + "=$val"
+    start, start_label, start_uid = tuple(edge[0])
+    end, end_label, end_uid = tuple(edge[1])
+    if start_uid == "id":
+        start = str(start)
+    if end_uid == "id":
+        end = str(end)
+    # TODO: Change to delete and replace for edges need to read in parameters and write them to the new edge with any
+    #  updates
+    query = "MATCH (a:" + start_label + ")-[r:" + edge_label + "]-(b:" + end_label + ") ""WHERE a." + start_uid \
+            + "=" + str(start) + " AND b." + end_uid + "=" + str(end) + " SET r." + attr + "=" + str(value) + \
+            " RETURN r"
     while True:
         try:
-            tx.run(query, start=start, end=end, val=value)
+            tx.run(query).values()
             break
         except TransientError:
             pass
@@ -418,7 +437,7 @@ def update_node(tx, node, attr, value):
     Update attribute of a node
 
     :param tx: neo4j write transaction
-    :param node: node id, label, type of id
+    :param node: node id tuple
     :param attr: attribute to be updated
     :param value: new value for the attribute
 
@@ -443,7 +462,7 @@ def update_agent(tx, node, attr, value):
     Update an agents attribute value.
 
     :param tx: neo4j write transaction
-    :param node: node id, label and type of id
+    :param node: node id tuple
     :param attr: attribute to be updated
     :param value: new value of attribute
 
@@ -468,7 +487,7 @@ def delete_agent(tx, agent):
     Delete an agent and all its relationships in the database
 
     :param tx: neo4j write transaction
-    :param agent: agent id
+    :param agent: agent id tuple
 
     :return: None
     """
@@ -479,7 +498,7 @@ def delete_agent(tx, agent):
         label = "Agent"
     while True:
         try:
-            tx.run("MATCH (n:" + label + ") ""WHERE n." + uid + "=$ID ""DETACH DELETE n", ID=agent[uid])
+            tx.run("MATCH (n:" + label + ") ""WHERE n." + uid + "=$ID ""DETACH DELETE n", ID=agent)
             break
         except TransientError:
             pass
@@ -490,7 +509,7 @@ def add_agent(tx, node, agent_label, params):
     Insert a new agent into the system at node
 
     :param tx: neo4j write transaction
-    :param node: node to locate agent at, id, label and type of id
+    :param node: node id tuple for node to locate agent at
     :param agent_label: label for the new agent
     :param params: list of parameters of agent
 
@@ -513,7 +532,7 @@ def add_agent(tx, node, agent_label, params):
     query = query + "})-[r:LOCATED]->(n)"
     while True:
         try:
-            tx.run("MATCH (n:" + label + ") ""WHERE n." + uid + "= '" + node[uid] + "' " + query)
+            tx.run("MATCH (n:" + label + ") ""WHERE n." + uid + "= '" + node + "' " + query)
             break
         except TransientError:
             pass
@@ -524,8 +543,8 @@ def create_edge(tx, node_a, node_b, edge_label=None, parameters=None):
     Adds and edge between two nodes with attributes and label as given
 
     :param tx: neo4j write transaction
-    :param node_a: source node id, label and id type
-    :param node_b: target node id, label and id type
+    :param node_a: source node id tuple
+    :param node_b: target node id tuple
     :param edge_label: label of new edge
     :param parameters: parameters of new edge
 
@@ -568,16 +587,16 @@ def shortest_social_path(tx, node, agent):
     Returns shortest path using social links from an agent to agents located at a given node
 
     :param tx: neo4j database read transaction
-    :param node: node target agents must be located at, id, label and type of id
-    :param agent: id, label and type of id of source agent
+    :param node: node id tuple for target agents must be located at
+    :param agent: source agent id tuple
 
-    :return:
+    :return: Length of shortest path
     """
     node_id, node_label, node_uid = tuple(node)
     agent_id, agent_label, agent_uid = tuple(agent)
     agents = get_node_agents(tx, [node_id, node_label, node_uid])
-    paths = [shortest_path(tx, [agent_id, agent_label, agent_uid], [ag, "Agent","id"],
-                           edge_label="SOCIAL") for ag in agents]
+    paths = [shortest_path(tx, agent, ag, edge_label="SOCIAL") for ag in agents]
+    paths = [path for path in paths if path]
     if paths:
         return min(paths)
     else:
@@ -589,7 +608,7 @@ def add_label_node(tx, node, label):
     Add database label to an existing node, nodes only not agents
 
     :param tx: neo4j write transaction
-    :param node: id, label and type of id of node to be updated
+    :param node: node id tuple to be updated
     :param label: new label to be added, must be in CamelCase
 
     :return: None
@@ -613,7 +632,7 @@ def add_label_agent(tx, agent, label):
     Add extra label to an agent in the database
 
     :param tx: neo4j write transaction
-    :param agent: id, label and type of id of agent to update
+    :param agent: agent to update id tuple
     :param label: new label to be added, must be in CamelCase
 
     :return: None
@@ -633,10 +652,20 @@ def add_label_agent(tx, agent, label):
 
 
 def check_services_location(tx, node):
+    """
+    Return a list of services provided at a location
+
+    :param tx: neo4j read or write transaction
+    :param node: node id tuple for node services should be located at
+
+    :return: list of service id tuples for services at the given node
+    """
     node_id, node_label, node_uid = tuple(node)
-    query = "MATCH (s)-[r:PROVIDE]->(n" + node_label + ") WHERE n." + node_uid + "=" + str(node_id) + "RETURN s"
-    res = tx.run(query).values()
-    return [(s, s["name"], "Service", "name") for s in res]
+    if node_uid == "name":
+        node_id = "'" + node_id + "'"
+    query = "MATCH (s)-[r:PROVIDE]->(n:" + node_label + ") WHERE n." + node_uid + "=" + str(node_id) + " RETURN s.name"
+    res = tx.run(query).value()
+    return [(s, "Service", "name") for s in res]
 
 
 def louvain(tx, node_label, edge_label, seed_property=None):
@@ -644,23 +673,25 @@ def louvain(tx, node_label, edge_label, seed_property=None):
     Returns the clustering of the group of nodes based on the edge type given
 
     :param tx: neo4j read or write transaction
-    :param node_label: label for both nodes
-    :param edge_label: label for the type of relationships to use at network over which to cluster
+    :param node_label: label for node type to be clustered
+    :param edge_label: label for the type of relationships to use as network over which to cluster
     :param seed_property: property of node which records its most closely associated cluster
 
     :return: Cluster assignments for nodes
     """
     if not tx.run("CALL gds.graph.exists('louvainGraph') YIELD exists").values()[0][0]:
-        query = "CALL gds.graph.create('louvainGraph', '" + node_label + "', '" + edge_label + "')"
+        query = "CALL gds.graph.create.cypher('louvainGraph', 'MATCH (a:" + node_label \
+                + ") RETURN id(a) AS id', 'MATCH (a)-[r:" + edge_label \
+                + "]-(b) RETURN id(a) AS source, id(b) AS target')"
         while True:
             try:
                 tx.run(query).values()
                 break
             except TransientError:
                 pass
-    query = "CALL gds.louvain.stream('louvainGraph', {includeIntermediateCommunities: true"
+    query = "CALL gds.louvain.stream('louvainGraph', {includeIntermediateCommunities:true"
     if seed_property:
-        query = ", seedProperty:'" + seed_property + "'"
+        query = query + ", seedProperty:'" + seed_property + "'"
     query = query + "}) YIELD nodeId, communityId, intermediateCommunityIds RETURN gds.util.asNode(nodeId).id, "
     query = query + "communityId, intermediateCommunityIds"
     while True:
@@ -671,7 +702,7 @@ def louvain(tx, node_label, edge_label, seed_property=None):
             pass
     tx.run("CALL gds.graph.drop('louvainGraph') YIELD graphName;")
     if sp:
-        return sp
+        return sp.values()
 
 
 def add_node(tx, node, params=None):
@@ -679,7 +710,7 @@ def add_node(tx, node, params=None):
     Insert a new node into the system at node
 
     :param tx: neo4j write transaction
-    :param node: node id, label and type of id, to add to system
+    :param node: node id tuple for node to add to system
     :param params: list of parameters of node
 
     :return: None
@@ -687,7 +718,7 @@ def add_node(tx, node, params=None):
     node_id, node_label, node_uid = tuple(node)
     query = "CREATE (n:" + node_label + " {" + node_uid + ":" + str(node_id)
     if params:
-        for param in params:
+        for param in params.keys():
             query = query + ", " + param + ":" + str(params[param])
     query = query + "})"
     while True:
@@ -699,8 +730,114 @@ def add_node(tx, node, params=None):
 
 
 def check_groupings(tx, agent):
+    """
+    check which clusters an agent is associated with
+
+    :param tx: neo4j read or write transaction
+    :param agent: agent id tuple
+
+    :return: list of cluster id numbers
+    """
     agent_id, agent_label, agent_uid = tuple(agent)
-    query = "MATCH (c)-[r:GROUPED]->(a:" + agent_label + ") WHERE a." + agent_uid + "=" + agent_id + " RETURN c.id"
+    query = "MATCH (c)-[r:GROUPED]->(a:" + agent_label + ") WHERE a." + agent_uid + "=" + str(agent_id) + " RETURN c.id"
+    while True:
+        try:
+            res = tx.run(query)
+            break
+        except TransientError:
+            pass
+    if res:
+        return res.value()
+    else:
+        return None
+
+
+def delete_edge(tx, node_a, node_b, edge_label=None):
+    query = "MATCH (a:" + node_a[1] + ") WHERE a." + node_a[2] + "=" + str(node_a[0]) + " WITH a MATCH (b:" \
+            + node_b[1] + ") WHERE b." + node_b[2] + "=" + str(node_b[0]) + " WITH a, b MATCH (a)-[r:" \
+            + edge_label + "]->(b) WITH r DELETE r"
+    while True:
+        try:
+            tx.run(query)
+            break
+        except TransientError:
+            pass
+
+
+def agents_in_cluster(tx, cluster):
+    query = "MATCH (a:Agent)<-[:GROUPED]-(c:Cluster) WHERE c.id=" + str(cluster[0]) + " RETURN a.id"
+    while True:
+        try:
+            res = tx.run(query)
+            break
+        except TransientError:
+            pass
+    if res:
+        agents = res.value()
+        if agents:
+            return [[ag, "Agent", "id"] for ag in agents]
+
+
+def clusters_in_system(tx):
+    query = "MATCH (c:Cluster) RETURN c.id ORDER BY c.id"
+    while True:
+        try:
+            res = tx.run(query)
+            res = res.value()
+            break
+        except (TransientError, CypherTypeError):
+            pass
+    if res:
+        clusters = res
+        return clusters
+
+
+def connectedness(tx, agent, cluster):
+    contacts = [ag[1] for ag in agent_contacts(tx, agent, "SOCIAL")]
+    group = [ag[0] for ag in agents_in_cluster(tx, cluster)]
+    return len(set(group).intersection(set(contacts)))
+
+
+def delete_agent_location(tx, agent, location_type=None):
+    agent_id, agent_label, agent_uid = agent
+    if not location_type:
+        location_type = "LOCATED"
+    query = "MATCH (n:" + agent_label + ")-[r:" + location_type + "]->() WHERE n." + agent_uid + "=" + str(agent_id) \
+            + " DELETE r"
+    while True:
+        try:
+            tx.run(query)
+            break
+        except TransientError:
+            pass
+
+
+def add_agent_location(tx, agent, node, location_type=None):
+    agent_id, agent_label, agent_uid = agent
+    node_id, node_label, node_uid = node
+    if not location_type:
+        location_type = "LOCATED"
+    query = "MATCH (a:" + agent_label + "), (n:" + node_label + ") WHERE a." + agent_uid + "=" + str(agent_id) \
+            + " AND n." + node_uid + "='" + str(node_id) + "' CREATE (a)-[r:" + location_type + "]->(n)"
+    while True:
+        try:
+            tx.run(query)
+            break
+        except TransientError:
+            pass
+
+
+def relocate_agent(tx, agent, node, location_type=None):
+    agent_id, agent_label, agent_uid = agent
+    node_id, node_label, node_uid = node
+    if not location_type:
+        location_type = "LOCATED"
+    delete_agent_location(tx, agent, location_type)
+    add_agent_location(tx, agent, node, location_type)
+
+
+def get_agents(tx, agent_type="Agent"):
+    query = "MATCH (a:" + agent_type + ") RETURN a.id"
     while True:
         try:
             res = tx.run(query)
@@ -709,5 +846,19 @@ def check_groupings(tx, agent):
             pass
     if res:
         return res.values()
-    else:
-        return None
+
+
+def get_edge_value(tx, edge, attribute, edge_label):
+    node_a, label_a, uid_a = tuple(edge[0])
+    node_b, label_b, uid_b = tuple(edge[1])
+    query = "MATCH (a:" + label_a + " {" + uid_a + ":" + str(node_a) + "})-[r:" + edge_label + "]-(b:" + label_b \
+            + " {" + uid_a + ":" \
+            + str(node_b) + "}) RETURN r." + attribute
+    while True:
+        try:
+            res = tx.run(query)
+            break
+        except TransientError:
+            pass
+    if res:
+        return res.values()[0][0]

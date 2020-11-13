@@ -1,11 +1,12 @@
 import SPmodelling
 # import concurrent.futures
 from multiprocessing import Process, Queue
+import specification
 print("finished spm imports")
 
 
 # noinspection PyRedundantParentheses
-def main(runs, length, population, modules=None, reset=True):
+def main(runs, length, population, coremodules=None, additionalmodules=None, reset=True):
     """
     This function takes the number of runs required, the time-step length of each run and the size of population and
     runs a SPmodel based on the local specification file. It saves all output to a run name as defined by the parameters
@@ -17,6 +18,7 @@ def main(runs, length, population, modules=None, reset=True):
     :param population: Size of initial and maintained population for each run
     :param modules: List of modules to be used in this modelling batch eg. ['Monitor', 'Flow', 'Population', 'Balancer',
                     'Structure', 'Social']
+    :param reset: Boolean dictates if the database is reset between runs
 
     :return: None
     """
@@ -24,43 +26,53 @@ def main(runs, length, population, modules=None, reset=True):
         if reset:
             SPmodelling.Reset.main(i, population, length)
             print("Finished Reset")
-        if modules:
-            q = Queue()
-            current_processes = []
-            if "Monitor" in modules:
+        q = Queue()
+        current_processes = []
+        if coremodules:
+            if "Monitor" in coremodules:
                 monitor = Process(target=SPmodelling.Monitor.main, args=tuple([length]))
                 monitor.start()
                 current_processes.append(monitor)
-            if "Population" in modules:
+            if "Population" in coremodules:
                 print("Executing Population")
                 inter1 = Process(target=SPmodelling.Population.main, args=(length, population))
                 inter1.start()
                 current_processes.append(inter1)
-            if "Structure" in modules:
+            if "Structure" in coremodules:
                 inter2 = Process(target=SPmodelling.Structure.main, args=tuple([length]))
                 inter2.start()
                 current_processes.append(inter2)
-            if "Balancer" in modules:
+            if "Balancer" in coremodules:
                 print("Execution Balancer")
                 inter3 = Process(target=SPmodelling.Balancer.main, args=tuple([length]))
                 inter3.start()
                 current_processes.append(inter3)
-            if "Flow" in modules:
-                print("Executing Flow")
-                agent1 = Process(target=SPmodelling.Flow.main, args=(length, i))
-                agent1.start()
-                current_processes.append(agent1)
-            if "Social" in modules:
-                print("Executing Social")
-                social1 = Process(target=SPmodelling.Social.main, args=(length, i))
-                social1.start()
-                current_processes.append(social1)
-            if "Cluster" in modules:
+            if "Cluster" in coremodules:
                 print("Executing Cluster")
                 inter4 = Process(target=SPmodelling.Cluster.main, args=tuple([length]))
                 inter4.start()
                 current_processes.append(inter4)
-            [pro.join() for pro in current_processes]
+            if "Opinion" in coremodules:
+                print("Executing Opinion")
+                inter5 = Process(target=specification.Opinion.main, args=tuple([length]))
+                inter5.start()
+                current_processes.append(inter5)
+            if "Flow" in coremodules:
+                print("Executing Flow")
+                agent1 = Process(target=SPmodelling.Flow.main, args=(length, i))
+                agent1.start()
+                current_processes.append(agent1)
+            if "Social" in coremodules:
+                print("Executing Social")
+                social1 = Process(target=SPmodelling.Social.main, args=(length, i))
+                social1.start()
+                current_processes.append(social1)
+        if additionalmodules:
+            for module in additionalmodules:
+                new_process = Process(target=module.main)
+                new_process.start()
+                current_processes.append(new_process)
+        [pro.join() for pro in current_processes]
 
     print("Main thread exit")
 

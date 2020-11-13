@@ -5,9 +5,10 @@
 <html>
   <head>
     <meta charset="utf-8" />
-    <title>Index &#8212; Socio-Physical Modelling 0.0.1 documentation</title>
+    <title>Index &#8212; Socio-Physical Modelling 1.1.0a documentation</title>
     <link rel="stylesheet" href="_static/classic.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="_static/graphviz.css" />
     
     <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
     <script src="_static/jquery.js"></script>
@@ -27,7 +28,7 @@
         <li class="right" >
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">Socio-Physical Modelling 0.0.1 documentation</a> &#187;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">Socio-Physical Modelling 1.1.0a documentation</a> &#187;</li> 
       </ul>
     </div>  
 
@@ -60,7 +61,13 @@
 <h2 id="A">A</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="interface.html#Interface.addagent">addagent() (in module Interface)</a>
+      <li><a href="interface.html#Interface.add_agent">add_agent() (in module Interface)</a>
+</li>
+      <li><a href="interface.html#Interface.add_label_agent">add_label_agent() (in module Interface)</a>
+</li>
+      <li><a href="interface.html#Interface.add_label_node">add_label_node() (in module Interface)</a>
+</li>
+      <li><a href="interface.html#Interface.add_node">add_node() (in module Interface)</a>
 </li>
       <li>
     Agent
@@ -69,19 +76,19 @@
         <li><a href="code.html#module-Agent">module</a>
 </li>
       </ul></li>
-      <li><a href="interface.html#Interface.agentcontacts">agentcontacts() (in module Interface)</a>
-</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="code.html#Node.Node.agentperception">agentperception() (Node.Node method)</a>
+      <li><a href="interface.html#Interface.agent_contacts">agent_contacts() (in module Interface)</a>
 </li>
-      <li><a href="code.html#Node.Node.agentprediction">agentprediction() (Node.Node method)</a>
+      <li><a href="code.html#Node.Node.agent_perception">agent_perception() (Node.Node method)</a>
 </li>
-      <li><a href="code.html#Node.Node.agentsready">agentsready() (Node.Node method)</a>
+      <li><a href="code.html#Node.Node.agent_prediction">agent_prediction() (Node.Node method)</a>
+</li>
+      <li><a href="interface.html#Interface.agent_relationships">agent_relationships() (in module Interface)</a>
+</li>
+      <li><a href="code.html#Node.Node.agents_ready">agents_ready() (Node.Node method)</a>
 </li>
       <li><a href="code.html#Structure.Structure.applychange">applychange() (Structure.Structure method)</a>
-</li>
-      <li><a href="code.html#Balancer.FlowReaction.applyrules">applyrules() (Balancer.FlowReaction method)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -102,19 +109,21 @@
 <h2 id="C">C</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="code.html#Agent.MobileAgent.choose">choose() (Agent.MobileAgent method)</a>
+      <li><a href="interface.html#Interface.check_groupings">check_groupings() (in module Interface)</a>
 </li>
-      <li><a href="code.html#Reset.Reset.clear_database">clear_database() (Reset.Reset static method)</a>
+      <li><a href="interface.html#Interface.check_node_label">check_node_label() (in module Interface)</a>
 </li>
-      <li><a href="code.html#Monitor.Monitor.close">close() (Monitor.Monitor method)</a>
+      <li><a href="interface.html#Interface.check_services_location">check_services_location() (in module Interface)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="interface.html#Interface.colocated">colocated() (in module Interface)</a>
+      <li><a href="code.html#Reset.Reset.clear_database">clear_database() (Reset.Reset static method)</a>
+</li>
+      <li><a href="interface.html#Interface.co_located">co_located() (in module Interface)</a>
 </li>
       <li><a href="code.html#Agent.CommunicativeAgent">CommunicativeAgent (class in Agent)</a>
 </li>
-      <li><a href="interface.html#Interface.createedge">createedge() (in module Interface)</a>
+      <li><a href="interface.html#Interface.create_edge">create_edge() (in module Interface)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -122,17 +131,21 @@
 <h2 id="D">D</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="interface.html#Interface.deleteagent">deleteagent() (in module Interface)</a>
+      <li><a href="interface.html#Interface.delete_agent">delete_agent() (in module Interface)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="interface.html#Interface.deletecontact">deletecontact() (in module Interface)</a>
+      <li><a href="interface.html#Interface.delete_contact">delete_contact() (in module Interface)</a>
 </li>
   </ul></td>
 </tr></table>
 
 <h2 id="F">F</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="code.html#Agent.filter_resource">filter_resource() (in module Agent)</a>
+</li>
+  </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li>
     Flow
@@ -141,10 +154,6 @@
         <li><a href="code.html#module-Flow">module</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="code.html#Balancer.FlowReaction">FlowReaction (class in Balancer)</a>
-</li>
   </ul></td>
 </tr></table>
 
@@ -155,17 +164,19 @@
 </li>
       <li><a href="code.html#Agent.MobileAgent.generator">generator() (Agent.MobileAgent method)</a>
 </li>
-      <li><a href="interface.html#Interface.getnode">getnode() (in module Interface)</a>
+      <li><a href="interface.html#Interface.get_node">get_node() (in module Interface)</a>
+</li>
+      <li><a href="interface.html#Interface.get_node_agents">get_node_agents() (in module Interface)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="interface.html#Interface.getnodeagents">getnodeagents() (in module Interface)</a>
+      <li><a href="interface.html#Interface.get_node_value">get_node_value() (in module Interface)</a>
 </li>
-      <li><a href="interface.html#Interface.getnodevalue">getnodevalue() (in module Interface)</a>
+      <li><a href="interface.html#Interface.get_run_name">get_run_name() (in module Interface)</a>
 </li>
-      <li><a href="interface.html#Interface.getrunname">getrunname() (in module Interface)</a>
+      <li><a href="interface.html#Interface.get_set_attribute">get_set_attribute() (in module Interface)</a>
 </li>
-      <li><a href="interface.html#Interface.gettime">gettime() (in module Interface)</a>
+      <li><a href="interface.html#Interface.get_time">get_time() (in module Interface)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -186,15 +197,11 @@
 <h2 id="L">L</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="code.html#Agent.MobileAgent.learn">learn() (Agent.MobileAgent method)</a>
-</li>
-      <li><a href="code.html#Agent.CommunicativeAgent.listen">listen() (Agent.CommunicativeAgent method)</a>
+      <li><a href="interface.html#Interface.locate_agent">locate_agent() (in module Interface)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="interface.html#Interface.locateagent">locateagent() (in module Interface)</a>
-</li>
-      <li><a href="code.html#Agent.CommunicativeAgent.look">look() (Agent.CommunicativeAgent method)</a>
+      <li><a href="interface.html#Interface.louvain">louvain() (in module Interface)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -252,7 +259,17 @@
       </ul></li>
       <li><a href="code.html#Monitor.Monitor">Monitor (class in Monitor)</a>
 </li>
+      <li><a href="code.html#Monitor.Monitor.monitor_close">monitor_close() (Monitor.Monitor method)</a>
+</li>
       <li><a href="code.html#Agent.MobileAgent.move">move() (Agent.MobileAgent method)</a>
+</li>
+      <li><a href="code.html#Agent.MobileAgent.move_choose">move_choose() (Agent.MobileAgent method)</a>
+</li>
+      <li><a href="code.html#Agent.MobileAgent.move_learn">move_learn() (Agent.MobileAgent method)</a>
+</li>
+      <li><a href="code.html#Agent.MobileAgent.move_payment">move_payment() (Agent.MobileAgent method)</a>
+</li>
+      <li><a href="code.html#Agent.MobileAgent.move_perception">move_perception() (Agent.MobileAgent method)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -277,24 +294,14 @@
 <h2 id="P">P</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="code.html#Agent.MobileAgent.payment">payment() (Agent.MobileAgent method)</a>
+      <li><a href="interface.html#Interface.perception">perception() (in module Interface)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="code.html#Agent.MobileAgent.perception">perception() (Agent.MobileAgent method)</a>
-
-      <ul>
-        <li><a href="interface.html#Interface.perception">(in module Interface)</a>
-</li>
-      </ul></li>
   </ul></td>
 </tr></table>
 
 <h2 id="R">R</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="code.html#Agent.CommunicativeAgent.react">react() (Agent.CommunicativeAgent method)</a>
-</li>
       <li>
     Reset
 
@@ -320,12 +327,24 @@
 </li>
       <li><a href="code.html#Reset.Reset.set_output">set_output() (Reset.Reset method)</a>
 </li>
-      <li><a href="interface.html#Interface.shortestpath">shortestpath() (in module Interface)</a>
+      <li><a href="interface.html#Interface.shortest_path">shortest_path() (in module Interface)</a>
+</li>
+      <li><a href="interface.html#Interface.shortest_social_path">shortest_social_path() (in module Interface)</a>
 </li>
       <li><a href="code.html#Monitor.Monitor.snapshot">snapshot() (Monitor.Monitor method)</a>
 </li>
+      <li><a href="code.html#Agent.CommunicativeAgent.social_listen">social_listen() (Agent.CommunicativeAgent method)</a>
+</li>
+      <li><a href="code.html#Agent.CommunicativeAgent.social_perception">social_perception() (Agent.CommunicativeAgent method)</a>
+</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="code.html#Agent.CommunicativeAgent.social_react">social_react() (Agent.CommunicativeAgent method)</a>
+</li>
+      <li><a href="code.html#Agent.CommunicativeAgent.social_talk">social_talk() (Agent.CommunicativeAgent method)</a>
+</li>
+      <li><a href="code.html#Agent.CommunicativeAgent.social_update">social_update() (Agent.CommunicativeAgent method)</a>
+</li>
       <li><a href="code.html#Agent.CommunicativeAgent.socialise">socialise() (Agent.CommunicativeAgent method)</a>
 </li>
       <li>
@@ -350,10 +369,6 @@
 <h2 id="T">T</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="code.html#Agent.CommunicativeAgent.talk">talk() (Agent.CommunicativeAgent method)</a>
-</li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="interface.html#Interface.tick">tick() (in module Interface)</a>
 </li>
   </ul></td>
@@ -362,17 +377,15 @@
 <h2 id="U">U</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="code.html#Agent.CommunicativeAgent.update">update() (Agent.CommunicativeAgent method)</a>
+      <li><a href="interface.html#Interface.update_agent">update_agent() (in module Interface)</a>
 </li>
-      <li><a href="interface.html#Interface.updateagent">updateagent() (in module Interface)</a>
+      <li><a href="interface.html#Interface.update_contact_edge">update_contact_edge() (in module Interface)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="interface.html#Interface.updatecontactedge">updatecontactedge() (in module Interface)</a>
+      <li><a href="interface.html#Interface.update_edge">update_edge() (in module Interface)</a>
 </li>
-      <li><a href="interface.html#Interface.updateedge">updateedge() (in module Interface)</a>
-</li>
-      <li><a href="interface.html#Interface.updatenode">updatenode() (in module Interface)</a>
+      <li><a href="interface.html#Interface.update_node">update_node() (in module Interface)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -384,6 +397,9 @@
       </div>
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
         <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="index.html">
+              <img class="logo" src="_static/UoHlogo_white.png" alt="Logo"/>
+            </a></p>
 <div id="searchbox" style="display: none" role="search">
   <h3 id="searchlabel">Quick search</h3>
     <div class="searchformwrapper">
@@ -407,7 +423,7 @@
         <li class="right" >
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">Socio-Physical Modelling 0.0.1 documentation</a> &#187;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">Socio-Physical Modelling 1.1.0a documentation</a> &#187;</li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">

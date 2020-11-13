@@ -128,7 +128,7 @@ class MobileAgent(ABC):
 
     def move_services(self, tx):
         import specification
-        node_class = specification.Nodeclasses[self.choice.end_node["name"]]
+        node_class = specification.NodeClasses[self.choice.end_node["name"]]
         node = node_class(self.choice.end_node["name"])
         services = node.available_services(tx)
         if services:
@@ -151,15 +151,10 @@ class MobileAgent(ABC):
         if self.choice:
             if self.move_payment(tx):
                 # Move node based on choice using tx
-                tx.run("MATCH (n:Agent)-[r:LOCATED]->() "
-                       "WHERE n.id = {id} "
-                       "DELETE r", id=self.id)
-                new = self.choice.end_node["name"]
-                tx.run("MATCH (n:Agent), (a:Node) "
-                       "WHERE n.id={id} AND a.name='" + new + "' CREATE (n)-[r:LOCATED]->(a)", id=self.id, new=new)
+                intf.relocate_agent(tx, [self.id, "Agent", "id"], [self.choice.end_node["name"], "Node", "name"])
                 service = self.move_services(tx)
                 self.move_learn(tx, self.choice, service)
-                return new
+                return self.choice.end_node["name"]
 
 
 class CommunicativeAgent(ABC):

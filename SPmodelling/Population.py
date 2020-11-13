@@ -8,7 +8,7 @@ from abc import ABC, abstractmethod
 class Population(SPmodelling.Intervenor.Intervenor):
 
     def __init__(self):
-        super(Population, self).__init__(self)
+        super(Population, self).__init__("Population")
         return None
 
     @abstractmethod
@@ -42,9 +42,9 @@ def main(rl, ps):
             if population_deficit:
                 ses.write_transaction(pop.apply_change, population_deficit)
             tx = ses.begin_transaction()
-            time = intf.gettime(tx)
+            time = intf.get_time(tx)
             while clock == time:
-                time = intf.gettime(tx)
+                time = intf.get_time(tx)
             clock = time
         dri.close()
     print("Population closed")
