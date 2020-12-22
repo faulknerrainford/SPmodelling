@@ -32,6 +32,17 @@ def filter_resource(tx, agent, edges, resource_edge, resource_agent):
 
 
 def filter_threshold(tx, agent, edges, resource_edge, resource_agent):
+    """
+    Filter a set of edges and end nodes based on an agents resource exceeding a threshold
+
+    :param tx: neo4j database read or write transaction
+    :param agent: agent tuple with id, label and id type
+    :param edges: set of edges and end nodes to filter
+    :param resource_edge: attribute with the threshold on the edges
+    :param resource_agent: resource attribute on the agent which must exceed the threshold
+
+    :return: filtered edges
+    """
     threshold = intf.get_node_value(tx, agent, resource_agent)
     if len(edges) < 2:
         if type(edges) == list and edges:
@@ -54,6 +65,11 @@ class MobileAgent(ABC):
 
     @abstractmethod
     def __init__(self, agentid, params=None, nuid="id"):
+        """
+        :param agentid: integer agent id value
+        :param params: the dictionary of key value pairs to be set as parameters of the agent
+        :param nuid: the name of the unique id field, defaults to "id" indicating an integer numerical id
+        """
         self.id = agentid
         self.view = None
         self.params = params
@@ -69,7 +85,7 @@ class MobileAgent(ABC):
         the database, the base function does nothing.
 
         :param tx: write transaction for a neo4j database
-        :param params: paramaters are given as a list to be used by the subclass.
+        :param params: parameters are given as a list to be used by the subclass.
 
         :return: None
         """
@@ -127,6 +143,13 @@ class MobileAgent(ABC):
         return None
 
     def move_services(self, tx):
+        """
+        Checks for the existence of services available to the agent
+
+        :param tx: neo4j database read or write transaction
+
+        :return: List of available services or None if no services available
+        """
         import specification
         node_class = specification.NodeClasses[self.choice.end_node["name"]]
         node = node_class(self.choice.end_node["name"])
@@ -164,6 +187,11 @@ class CommunicativeAgent(ABC):
 
     @abstractmethod
     def __init__(self, agentid, params=None, nuid="id"):
+        """
+        :param agentid: integer agent id value
+        :param params: the dictionary of key value pairs to be set as parameters of the agent
+        :param nuid: the name of the unique id field, defaults to "id" indicating an integer numerical id
+        """
         self.id = agentid
         self.view = None
         self.params = params

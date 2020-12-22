@@ -5,20 +5,36 @@ import specification as specification
 from abc import ABC, abstractmethod
 
 
-class Population(SPmodelling.Intervenor.Intervenor):
+class Population(SPmodelling.Intervenor.Intervenor, ABC):
 
     def __init__(self):
         super(Population, self).__init__("Population")
+
+    @abstractmethod
+    def check(self, tx, params=None):
+        """
+        Method for detecting if agents need removing or adding to the system
+
+        :param tx: neo4j database read or write transaction
+        :param params: intended population size
+
+        :return: None
+        """
+        super(Population, self).check(tx)
         return None
 
     @abstractmethod
-    def check(self, tx, ps):
-        super(Population, self).check()
-        return None
+    def apply_change(self, tx, params=None):
+        """
+        Method for adding or removing agents from system
 
-    @abstractmethod
-    def apply_change(self, tx, population_deficit):
-        super(Population, self).apply_change(self, tx, population_deficit)
+        :param tx: neo4j database write transaction
+        :param params: population deficit the amount of population that needs to be added or in the case of a negative
+                       value possibly removed from the system
+
+        :return:None
+        """
+        super(Population, self).apply_change(self, tx, params)
         return None
 
 

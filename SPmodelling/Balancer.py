@@ -18,17 +18,26 @@ class Balancer(SPmodelling.Intervenor.Intervenor):
         """
         super(Balancer, self).__init__(self)
 
-    def check(self):
+    def check(self, tx, params=None):
+        """
+        Check if rule application is needed. If it is to be used it must be implemented in the subclass
+
+        :param tx: neo4j database read or write transaction
+        :param params: Any additional parameters needed by balancer
+
+        :return: True if rule application is needed False otherwise
+        """
         pass
 
     @abstractmethod
-    def apply_change(self, txl):
+    def apply_change(self, txl, params=None):
         """
         The subclass must implement this function to apply a change rule to the system. This rule will be applied
         iteratively and may need a check and wait system to avoid over application depending on the intended use of the
         rule.
 
         :param txl: write transaction for neo4j database
+        :param params: Any additional parameters needed by balancer
 
         :return: None
         """

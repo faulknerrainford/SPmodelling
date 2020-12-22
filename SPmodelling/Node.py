@@ -14,7 +14,7 @@ class Node(ABC):
 
         :param name: Used as node id
         :param capacity: Max number of agents which can be located at node
-        :param duration: Number of timesteps all agents spend at node
+        :param duration: Number of time steps all agents spend at node
         :param queue: List of agents and times for them to be processed at nodes with predictions
         :param nuid: defaults to "name" unless another form of id is used.
         """

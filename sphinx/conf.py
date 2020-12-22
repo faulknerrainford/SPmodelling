@@ -18,8 +18,8 @@ sys.path.insert(0, os.path.abspath('../SPmodelling/'))
 # -- Project information -----------------------------------------------------
 
 project = 'Socio-Physical Modelling'
-copyright = '2020, Penny Faulkner Rainford'
-author = 'Penny Faulkner Rainford'
+copyright = '2020, University of Hull'
+author = 'Penny Faulkner Rainford, Yasmin Merali and Susan Stepney'
 
 # The full version, including alpha/beta/rc tags
 release = '1.1.0a'
@@ -39,7 +39,8 @@ extensions = ['sphinx.ext.autodoc',
               'sphinx.ext.inheritance_diagram'
               ]
 
-autosummary_generate = False
+autodoc_default_options = {'members':None}
+autosummary_generate = True
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']

@@ -4,8 +4,20 @@ from neo4j import GraphDatabase
 
 
 class Cluster(SPmodelling.Intervenor.Intervenor):
+    """
+    Intervenor that forms and manages the clusters in the system. It uses the louvain algorithm and the structure of the
+     social network for community detection and updates with seeded clusters for continuity.
+    """
 
     def __init__(self, tx, strength):
+        """
+        When initialising clusters in the system we run an unseeded algorithm using the strength attribute given to work
+         out the initial clustering on the social network
+
+        :param tx: neo4j database write transaction
+        :param strength: attribute of the social links in the social network to be used as the strength of the links for
+                         clustering purposes.
+        """
         super(Cluster, self).__init__("Cluster")
         self.new_groupings = None
         self.strength = strength
@@ -25,7 +37,15 @@ class Cluster(SPmodelling.Intervenor.Intervenor):
                 intf.create_edge(tx, [clust, "Cluster", 'id'], [ag[0], "Agent", 'id'], edge_label="GROUPED",
                                  parameters=self.strength + ":0")
 
-    def check(self, tx):
+    def check(self, tx, params=None):
+        """
+        Check the clustering on the system and records any new cluster assignments
+
+        :param tx: neo4j database read or write transactions
+        :param params: Any additional parameters needed by cluster
+
+        :return: List of new agent cluster pairings
+        """
         super(Cluster, self).check(tx)
         self.new_groupings = []
         # look for changes in clusters and make a change list
@@ -41,7 +61,15 @@ class Cluster(SPmodelling.Intervenor.Intervenor):
                     self.new_groupings.append([ag[0], cluster[0]])
         return self.new_groupings
 
-    def apply_change(self, tx):
+    def apply_change(self, tx, params=None):
+        """
+        Implement new clusters and new grouping links as identified in the check
+
+        :param tx: neo4j database write transaction
+        :param params: Any additional parameters needed by balancer
+
+        :return: None
+        """
         super(Cluster, self).apply_change(tx)
         if self.new_groupings:
             self.current_clusters = intf.clusters_in_system(tx)
@@ -55,16 +83,47 @@ class Cluster(SPmodelling.Intervenor.Intervenor):
 
     @staticmethod
     def new_cluster(tx, cluster_id):
+        """
+        Adds new cluster to system
+
+        :param tx: neo4j database write transaction
+        :param cluster_id: id for the new cluster to be created
+
+        :return: None
+        """
         intf.add_node(tx, [cluster_id, 'Cluster', 'id'])
 
 
 def update_cluster_strength(tx, agent, cluster, strength, attribute_name):
+    """
+    Update cluster edge strength with the given strength on the attribute_name given
+
+    :param tx: neo4j database write transaction
+    :param agent: agent tuple of id, label, id type
+    :param cluster: cluster tuple of id, label, id type
+    :param strength: value of the strength of the new cluster link
+    :param attribute_name: attribute name to assign cluster link strength to
+
+    :return: None
+    """
     # update cluster strength links
     intf.update_edge(tx, [agent, cluster], attribute_name, strength, "GROUPED")
 
 
-def update_cluster_orientation(tx, ps, attribute, threshold, ordering):
-    agents = [[i, "Agent", "id"] for i in range(ps)]
+def update_cluster_orientation(tx, attribute, threshold, ordering):
+    """
+    For each agent check for its strongest cluster link and assign that clusters as it's seed cluster for future
+    clustering runs. Also check for cluster links whose strength does not reach threshold values and remove those
+    cluster links.
+
+    :param tx: neo4j database write transaction
+    :param attribute: attribute name for strength of cluster links
+    :param threshold: threshold values for cluster links to continue to exist
+    :param ordering: whether threshold requires value to be over ("ascending") or under ("descending") the threshold
+                     value as given
+    :return: None
+    """
+    agents = [(i, "Agent", "id") for i in intf.get_agents(tx, "Agent")]
     for agent in agents:
         clusters = intf.check_groupings(tx, agent)
         clusters = [[cluster, "Cluster", "id"] for cluster in clusters]
