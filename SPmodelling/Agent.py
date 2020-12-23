@@ -2,11 +2,11 @@ from abc import ABC, abstractmethod
 import SPmodelling.Interface as intf
 
 
-def filter_resource(tx, agent, edges, resource_edge, resource_agent):
+def filter_resource(dri, agent, edges, resource_edge, resource_agent):
     """
     Filters a set of edges and end nodes based on a resource.
 
-    :param tx: neo4j database read transaction
+    :param dri: neo4j database driver for database access
     :param agent: list of agent id, label and id type
     :param edges: list of edges
     :param resource_edge: name of resource cost on edges
@@ -16,7 +16,7 @@ def filter_resource(tx, agent, edges, resource_edge, resource_agent):
     """
     agent, agent_label, agent_uid = tuple(agent)
     valid_edges = []
-    current_resources = intf.get_node_value(tx, [agent, agent_label, agent_uid], resource_agent)
+    current_resources = intf.get_node_value(dri, [agent, agent_label, agent_uid], resource_agent)
     if len(edges) > 1:
         for edge in edges:
             cost = 0
@@ -31,8 +31,19 @@ def filter_resource(tx, agent, edges, resource_edge, resource_agent):
     return valid_edges
 
 
-def filter_threshold(tx, agent, edges, resource_edge, resource_agent):
-    threshold = intf.get_node_value(tx, agent, resource_agent)
+def filter_threshold(dri, agent, edges, resource_edge, resource_agent):
+    """
+    Filter agents available edges based on an agent resource exceeding a threshold
+
+    :param dri: neo4j database driver for access to database
+    :param agent: agent tuple - agent id, label and id type
+    :param edges: list of edges available
+    :param resource_edge: resource threshold given by edge
+    :param resource_agent: resource on agent for comparison
+
+    :return: list of filtered edges
+    """
+    threshold = intf.get_node_value(dri, agent, resource_agent)
     if len(edges) < 2:
         if type(edges) == list and edges:
             choice = edges[0]
@@ -63,12 +74,12 @@ class MobileAgent(ABC):
         self.core_operations = "default"
 
     @abstractmethod
-    def generator(self, tx, params):
+    def generator(self, dri, params):
         """
         Subclass should implement code to generate a specialised agent using the interface to insert the new agent into
         the database, the base function does nothing.
 
-        :param tx: write transaction for a neo4j database
+        :param dri: driver for a neo4j database
         :param params: paramaters are given as a list to be used by the subclass.
 
         :return: None
@@ -76,12 +87,12 @@ class MobileAgent(ABC):
         pass
 
     @abstractmethod
-    def move_perception(self, tx, perc):
+    def move_perception(self, dri, perc):
         """
         Subclass must implement this class to perform the Agents filtering to remove options the agent considers not
         possible for it. The agent will then reset the agent view to the filtered version.
 
-        :param tx: Read or write transaction for neo4j database
+        :param dri: Driver for neo4j database
         :param perc: Perception passed to agent from local node
 
         :return: None
@@ -89,71 +100,71 @@ class MobileAgent(ABC):
         self.view = perc
 
     @abstractmethod
-    def move_choose(self, tx, perc):
+    def move_choose(self, dri, perc):
         """
         Subclass must implement this function to make a choice between all possible options after node and agent filtering
         This class calls the agent perception function so super call must be made at start of funciton.
 
-        :param tx: read or write transaction for neo4j
+        :param dri: Driver for neo4j database
         :param perc: passed by node to give agent current local options
 
         :return: None
         """
-        self.move_perception(tx, perc)
+        self.move_perception(dri, perc)
 
     @abstractmethod
-    def move_learn(self, tx, choice, service):
+    def move_learn(self, dri, choice, service):
         """
         Subclass must implement this function to make changes to the agent and node after moving.
 
-        :param tx: write transaction for neo4j
+        :param dri: Driver for neo4j
         :param choice: Relationship object passed from the interface which the agent moved along
 
-        :return: [choice, tx] Relationship object and neo4j write transaction
+        :return: [choice, dri] Relationship object and neo4j write transaction
         """
-        return [choice, tx]
+        return [choice, dri]
         # uses interface to update network based on choice
 
     @abstractmethod
-    def move_payment(self, tx):
+    def move_payment(self, dri):
         """
         Subclass must implement this function to make changes to the agent, edges and nodes before/during movement.
         Including paying any cost of the movement.
 
-        :param tx: write transaction for neo4j database
+        :param dri: Driver for neo4j database
 
         :return: None
         """
         return None
 
-    def move_services(self, tx):
+    def move_services(self, dri):
         import specification
         node_class = specification.NodeClasses[self.choice.end_node["name"]]
         node = node_class(self.choice.end_node["name"])
-        services = node.available_services(tx)
+        services = node.available_services(dri)
         if services:
             return services
         else:
             return None
 
-    def move(self, tx, perc):
+    def move(self, dri, perc):
         """
         This function performs action of the agent. It calls the choice function and checks for a return and a payment
         has been made (if the payment fails the agent doesn't move). The agent is moved and then learns. There is no
         reason for subclasses to implement this function.
 
-        :param tx: neo4j write transaction
+        :param dri: neo4j driver
         :param perc: perception of local surroundings passed to agent by it's local node
 
         :return: If agent moves return the new local node
         """
-        self.choice = self.move_choose(tx, perc)
+        self.choice = self.move_choose(dri, perc)
         if self.choice:
-            if self.move_payment(tx):
-                # Move node based on choice using tx
-                intf.relocate_agent(tx, [self.id, "Agent", "id"], [self.choice.end_node["name"], "Node", "name"])
-                service = self.move_services(tx)
-                self.move_learn(tx, self.choice, service)
+            if self.move_payment(dri):
+                # Move node based on choice using dri
+                intf.relocate_agent(dri, [self.id, "Agent", "id"], [self.choice.end_node["name"], "Node", "name"])
+                service = self.move_services(dri)
+                self.move_learn(dri, self.choice, service)
                 return self.choice.end_node["name"]
 
 
@@ -169,76 +180,76 @@ class CommunicativeAgent(ABC):
         self.params = params
         self.nuid = nuid
 
-    def socialise(self, tx):
+    def socialise(self, dri):
         """
         This function does not need to be implemented in the subclass. It calls the five functions that an agent
         performs as an action. The agent will: look, update, talk, listen and then react.
 
-        :param tx: neo4j write transaction
+        :param dri: neo4j driver
 
         :return: None
         """
-        if not self.social_perception(tx):
-            self.social_update(tx)
-            self.social_talk(tx)
-            self.social_listen(tx)
-            self.social_react(tx)
+        if not self.social_perception(dri):
+            self.social_update(dri)
+            self.social_talk(dri)
+            self.social_listen(dri)
+            self.social_react(dri)
 
     @abstractmethod
-    def social_perception(self, tx):
+    def social_perception(self, dri):
         """
         The subclass should implement this function to allow the agent to detect other entities in its social network.
         Can also be used to detect agents colocated with it in a physical network.
 
-        :param tx: read or write transaction for a neo4j database
+        :param dri: driver for a neo4j database
 
         :return: None
         """
         return None
 
     @abstractmethod
-    def social_update(self, tx):
+    def social_update(self, dri):
         """
         The subclass should implement this function to allow the agent to update it's own values based on it's local
         social network and colocated agents in physical networks.
 
-        :param tx: write transaction for a neo4j database
+        :param dri: driver for a neo4j database
 
         :return: None
         """
         return None
 
     @abstractmethod
-    def social_talk(self, tx):
+    def social_talk(self, dri):
         """
         The subclass should implement this function to allow agents to form new social connections possibly through
         existing connections or co-location.
 
-        :param tx: write transaction for a neo4j database
+        :param dri: driver for a neo4j database
 
         :return: None
         """
         return None
 
     @abstractmethod
-    def social_listen(self, tx):
+    def social_listen(self, dri):
         """
         The subclass should implement this function to allow agents to change their values or form new connections based
         on the situation after talking.
 
-        :param tx: write transaction for a neo4j database
+        :param dri: driver for a neo4j database
 
         :return: None
         """
         return None
 
     @abstractmethod
-    def social_react(self, tx):
+    def social_react(self, dri):
         """
         The subclass should implement this function. The agent has a final opportunity to adjust its values and manage
         its social network. This includes managing the number of social links.
 
-        :param tx: write transaction for neo4j database
+        :param dri: driver for neo4j database
 
         :return: None
         """

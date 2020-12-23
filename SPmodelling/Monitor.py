@@ -29,11 +29,11 @@ class Monitor(ABC):
         self.x = 0
 
     @abstractmethod
-    def snapshot(self, txl, ctime):
+    def snapshot(self, dri, ctime):
         """
         Captures data from a single time step in database. Subclass must implement to capture wanted data.
 
-        :param txl: neo4j read or write transaction
+        :param dri: neo4j read or write transaction
         :param ctime: current time
 
         :return: True if snapshot is successful.
@@ -50,11 +50,11 @@ class Monitor(ABC):
         return False
 
     @abstractmethod
-    def monitor_close(self, txl):
+    def monitor_close(self, dri):
         """
         subclass must implement to save out data and graphs for analysis
 
-        :param txl: neo4j read or write transaction
+        :param dri: neo4j read or write transaction
 
         :return: None
         """
@@ -69,24 +69,18 @@ def main(rl):
 
     :return: None
     """
-    monitor = specification.Monitor()
     clock = 0
+    dri = GraphDatabase.driver(specification.database_uri, auth=specification.Monitor_auth,
+                                  max_connection_lifetime=36000)
+    monitor = specification.Monitor(dri)
     while clock < rl:
-        driver = GraphDatabase.driver(specification.database_uri, auth=specification.Monitor_auth,
-                                      max_connection_lifetime=20000)
-        with driver.session() as session:
-            # modifying and redrawing plot over time and saving plot rather than an animation
-            session.write_transaction(monitor.snapshot, clock)
-            tx = session.begin_transaction()
-            current_time = intf.gettime(tx)
-            while clock == current_time:
-                current_time = intf.gettime(tx)
-            clock = current_time
-        driver.close()
+        # modifying and redrawing plot over time and saving plot rather than an animation
+        monitor.snapshot(dri, clock)
+        current_time = intf.get_time(dri)
+        while clock == current_time:
+            current_time = intf.get_time(dri)
+        clock = current_time
     print("Monitor Capture complete")
-    driver = GraphDatabase.driver(specification.database_uri, auth=specification.Monitor_auth,
-                                  max_connection_lifetime=2000)
-    with driver.session() as session:
-        session.write_transaction(monitor.monitor_close)
-    driver.close()
+    monitor.monitor_close(dri)
+    dri.close()
     print("Monitor closed")

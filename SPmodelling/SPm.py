@@ -29,10 +29,6 @@ def main(runs, length, population, coremodules=None, additionalmodules=None, res
         q = Queue()
         current_processes = []
         if coremodules:
-            if "Monitor" in coremodules:
-                monitor = Process(target=SPmodelling.Monitor.main, args=tuple([length]))
-                monitor.start()
-                current_processes.append(monitor)
             if "Population" in coremodules:
                 print("Executing Population")
                 inter1 = Process(target=SPmodelling.Population.main, args=(length, population))
@@ -67,6 +63,10 @@ def main(runs, length, population, coremodules=None, additionalmodules=None, res
                 social1 = Process(target=SPmodelling.Social.main, args=(length, i))
                 social1.start()
                 current_processes.append(social1)
+            if "Monitor" in coremodules:
+                monitor = Process(target=SPmodelling.Monitor.main, args=tuple([length]))
+                monitor.start()
+                current_processes.append(monitor)
         if additionalmodules:
             for module in additionalmodules:
                 new_process = Process(target=module.main)

@@ -10,5 +10,5 @@ class Service(ABC):
         self.capacity = capacity
 
     @abstractmethod
-    def provide_service(self, tx, agent):
+    def provide_service(self, dri, agent):
         pass

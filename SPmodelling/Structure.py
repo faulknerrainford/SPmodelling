@@ -14,12 +14,12 @@ class Structure(ABC):
         pass
 
     @abstractmethod
-    def applychange(self, txl):
+    def applychange(self, dri):
         """
         This function must be implemented by the subclass to check for events and apply structural changes to the system
         environment.
 
-        :param txl: neo4j write transaction
+        :param dri: neo4j driver
 
         :return: None
         """
@@ -38,12 +38,10 @@ def main(rl):
     while clock < rl:
         dri = GraphDatabase.driver(specification.database_uri, auth=specification.Structure_auth,
                                    max_connection_lifetime=2000)
-        with dri.session() as ses:
-            ses.write_transaction(specification.Structure.applychange)
-            tx = ses.begin_transaction()
-            time = intf.gettime(tx)
-            while clock == time:
-                time = intf.gettime(tx)
-            clock = time
+        specification.Structure.applychange(dri)
+        time = intf.gettime(dri)
+        while clock == time:
+            time = intf.gettime(dri)
+        clock = time
         print(clock)
         dri.close()

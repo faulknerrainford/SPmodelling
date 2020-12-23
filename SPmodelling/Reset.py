@@ -11,11 +11,11 @@ class Reset(ABC):
     def __init__(self, reset_tag):
         self.reset_name = reset_tag      
 
-    def set_output(self, tx, run_number, pop_size, run_length):
+    def set_output(self, dri, run_number, pop_size, run_length):
         """
         Set name of run for output files
 
-        :param tx: neo4j write transaction
+        :param dri: neo4j database driver
         :param run_number: run number
         :param pop_size: size of initial population
         :param run_length: number of time steps in run
@@ -25,42 +25,48 @@ class Reset(ABC):
         import specification
         tag = specification.specname + "_" + self.reset_name + "_" + str(pop_size) + "_" + str(run_length) + "_" + str(
             run_number)
-        tx.run("CREATE (a:Tag {tag:$tag})", tag=tag)
+        ses = dri.session()
+        ses.run("CREATE (a:Tag {tag:$tag})", tag=tag)
+        ses.close()
         print("set output")
 
     @staticmethod
-    def clear_database(tx):
+    def clear_database(dri):
         """
         Remove all nodes and relationships from database
 
-        :param tx: neo4j write transaction
+        :param dri: neo4j driver
 
         :return: NOne
         """
-        tx.run("MATCH ()-[r]->() "
+        ses = dri.session()
+        ses.run("MATCH ()-[r]->() "
                "DELETE r")
-        tx.run("MATCH (a) "
+        ses.run("MATCH (a) "
                "DELETE a")
+        ses.close()
         print("clear database")
 
     @staticmethod
-    def set_clock(tx):
+    def set_clock(dri):
         """
         Initialise a clock node to zero
 
-        :param tx: neo4j write transaction
+        :param dri: neo4j driver
 
         :return: None
         """
-        tx.run("CREATE (a:Clock {time:0})")
+        ses = dri.session()
+        ses.run("CREATE (a:Clock {time:0})")
+        ses.close()
 
     @staticmethod
     @abstractmethod
-    def set_nodes(tx):
+    def set_nodes(dri):
         """
         Subclass must implement this to set up the initial environment nodes for a run
 
-        :param tx: neo4j write transaction
+        :param dri: neo4j driver
 
         :return: None
         """
@@ -68,11 +74,11 @@ class Reset(ABC):
 
     @staticmethod
     @abstractmethod
-    def set_edges(tx):
+    def set_edges(dri):
         """
         Subclass must implement this to set up the initial environment edges and relationships for a run
 
-        :param tx: neo4j write transaction
+        :param dri: neo4j driver
 
         :return: None
         """
@@ -80,11 +86,11 @@ class Reset(ABC):
 
     @staticmethod
     @abstractmethod
-    def generate_population(tx, pop_size):
+    def generate_population(dri, pop_size):
         """
         Subclass must implement this to set up the initial population of the run
 
-        :param tx: neo4j write transaction
+        :param dri: neo4j driver
         :param pop_size: number of agents to add to system
 
         :return: None
@@ -106,13 +112,12 @@ def main(rn, ps, rl):
     print("running rest")
     dri = GraphDatabase.driver(specification.database_uri, auth=specification.Reset_auth, max_connection_lifetime=2000)
     print("In code")
-    with dri.session() as ses:
-        reset = specification.Reset.Reset()
-        ses.write_transaction(reset.clear_database)
-        ses.write_transaction(reset.set_output, rn, ps, rl)
-        ses.write_transaction(reset.set_clock)
-        ses.write_transaction(reset.set_nodes)
-        ses.write_transaction(reset.set_edges)
-        ses.write_transaction(reset.set_service)
-        ses.write_transaction(reset.generate_population, ps)
+    reset = specification.Reset.Reset()
+    reset.clear_database(dri)
+    reset.set_output(dri, rn, ps, rl)
+    reset.set_clock(dri)
+    reset.set_nodes(dri)
+    reset.set_edges(dri)
+    reset.set_service(dri)
+    reset.generate_population(dri, ps)
     dri.close()

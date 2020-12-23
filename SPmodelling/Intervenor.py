@@ -10,34 +10,32 @@ class Intervenor(ABC):
         pass
 
     @abstractmethod
-    def check(self, tx):
+    def check(self, dri):
         pass
 
     @abstractmethod
-    def apply_change(self, tx):
+    def apply_change(self, dri):
         pass
 
     def main(self):
         """
         default intervenor run set up for subclasses to use.
 
-        :param tx:
+        :param dri:
         :param length:
         :return:
         """
         import specification
         clock = 0
         dri = GraphDatabase.driver(specification.database_uri, auth=specification.Inter_auth,
-                                   max_connection_lifetime=2000)
-        with dri.session() as ses:
-            length = ses.read_transaction(intf.get_run_length)
-            while clock < length:
-                ses.write_transaction(self.check)
-                ses.write_transaction(self.apply_change)
-                tx = ses.begin_transaction()
-                time = intf.get_time(tx)
-                while clock == time:
-                    time = intf.get_time(tx)
-                clock = time
+                                   max_connection_lifetime=36000)
+        length = intf.get_run_length(dri)
+        while clock < length:
+            self.check(dri)
+            self.apply_change(dri)
+            time = intf.get_time(dri)
+            while clock == time:
+                time = intf.get_time(dri)
+            clock = time
         dri.close()
         print(self.name + " closed")

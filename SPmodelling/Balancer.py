@@ -47,13 +47,11 @@ def main(rl):
     clock = 0
     while clock < rl:
         dri = GraphDatabase.driver(specification.database_uri, auth=specification.Balancer_auth,
-                                   max_connection_lifetime=2000)
-        with dri.session() as ses:
-            ses.write_transaction(bal.apply_change)
-            tx = ses.begin_transaction()
-            time = intf.gettime(tx)
-            while clock == time:
-                time = intf.gettime(tx)
-            clock = time
+                                   max_connection_lifetime=36000)
+        bal.apply_change(dri)
+        time = intf.gettime(dri)
+        while clock == time:
+            time = intf.gettime(dri)
+        clock = time
         dri.close()
     print("Balancer closed")

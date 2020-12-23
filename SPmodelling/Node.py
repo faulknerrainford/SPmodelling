@@ -25,11 +25,11 @@ class Node(ABC):
         self.nuid = nuid
         self.classname = classname
 
-    def available_services(self, tx):
-        return intf.check_services_location(tx, (self.name, "Node", "name"))
+    def available_services(self, dri):
+        return intf.check_services_location(dri, (self.name, "Node", "name"))
 
     @abstractmethod
-    def agents_ready(self, tx):
+    def agents_ready(self, dri):
         """
         Identifies the set of current agents for processing, either the correct set in the queue or all the agents at
         the node. It checks for unqueued agents in nodes with queue and runs the nodes prediction function to add them
@@ -37,46 +37,46 @@ class Node(ABC):
         the move function. We then delete the part of the queue that has been processed to save space. Subclass must
         implement this function for any aspects unique to model.
 
-        :param tx: neo4j write transaction
+        :param dri: neo4j driver
 
         :return: None
         """
-        agents = intf.get_node_agents(tx, [self.name, "Node", "name"])
-        clock = intf.get_time(tx)
+        agents = intf.get_node_agents(dri, [self.name, "Node", "name"])
+        clock = intf.get_time(dri)
         if self.queue or self.queue == {}:
             queueagents = [key for time in self.queue.keys() for key in self.queue[time].keys()]
             newagents = [ag for ag in agents if ag[0] not in queueagents]
             # run prediction on each unqueued agent
             for ag in newagents:
-                self.agent_prediction(tx, ag)
+                self.agent_prediction(dri, ag)
         for ag in agents:
             if self.queue:
                 if clock in self.queue.keys():
                     if ag[0] in self.queue[clock].keys():
-                        agper = self.agent_perception(tx, ag, self.queue[clock][ag[0]][0],
+                        agper = self.agent_perception(dri, ag, self.queue[clock][ag[0]][0],
                                                       self.queue[clock][ag[0]])
-                        for label in intf.check_node_label(tx, ag):
+                        for label in intf.check_node_label(dri, ag):
                             if label in specification.AgentClasses.keys():
                                 Agclass = specification.AgentClasses[label]
                                 agclass = Agclass(ag[0])
-                                agclass.move(tx, agper)
+                                agclass.move(dri, agper)
             else:
-                agper = self.agent_perception(tx, ag)
-                for label in intf.check_node_label(tx, ag):
+                agper = self.agent_perception(dri, ag)
+                for label in intf.check_node_label(dri, ag):
                     if label in specification.AgentClasses.keys():
                         Agclass = specification.AgentClasses[label]
                         agclass = Agclass(ag[0])
-                        agclass.move(tx, agper)
+                        agclass.move(dri, agper)
         if self.queue and clock in self.queue.keys():
             del self.queue[clock]
 
     @abstractmethod
-    def agent_perception(self, tx, agent, dest=None, waittime=None):
+    def agent_perception(self, dri, agent, dest=None, waittime=None):
         """
         The local environment of the node filtered by availability to a particular agent. Subclass must implement this
         function to add node filtering for particular model
 
-        :param tx: neo4j read or write transaction
+        :param dri: neo4j driver
         :param agent: agent id, label and id type
         :param dest: passed by nodes with queues if agent destination has already been determined by prediction.
         :param waittime: time the agent has been waiting at the node
@@ -86,7 +86,7 @@ class Node(ABC):
         if dest:
             view = dest
         else:
-            view = intf.perception(tx, agent)[1:]
+            view = intf.perception(dri, agent)[1:]
         if type(view) == list:
             for edge in view:
                 if "cap" in edge.end_node.keys():
@@ -95,15 +95,15 @@ class Node(ABC):
         return view
 
     @abstractmethod
-    def agent_prediction(self, tx, agent):
+    def agent_prediction(self, dri, agent):
         """
         Predict how long the agent will stay at the node and its destination once it leaves. This must be implemented by
         the subclass to predict agent behaviour if node has a queue.
 
-        :param tx: neo4j write transaction
+        :param dri: neo4j driver
         :param agent: agent id, label and id type
 
         :return: view of local environment for agent
         """
-        view = intf.perception(tx, agent)
+        view = intf.perception(dri, agent)
         return view

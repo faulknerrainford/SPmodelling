@@ -12,13 +12,13 @@ class Population(SPmodelling.Intervenor.Intervenor):
         return None
 
     @abstractmethod
-    def check(self, tx, ps):
+    def check(self, dri, ps):
         super(Population, self).check()
         return None
 
     @abstractmethod
-    def apply_change(self, tx, population_deficit):
-        super(Population, self).apply_change(self, tx, population_deficit)
+    def apply_change(self, dri, population_deficit):
+        super(Population, self).apply_change(self, dri, population_deficit)
         return None
 
 
@@ -35,16 +35,14 @@ def main(rl, ps):
     clock = 0
     while clock < rl:
         dri = GraphDatabase.driver(specification.database_uri, auth=specification.Population_auth,
-                                   max_connection_lifetime=2000)
+                                   max_connection_lifetime=36000)
         pop = specification.Population()
-        with dri.session() as ses:
-            population_deficit = ses.read_transaction(pop.check, ps)
-            if population_deficit:
-                ses.write_transaction(pop.apply_change, population_deficit)
-            tx = ses.begin_transaction()
-            time = intf.get_time(tx)
-            while clock == time:
-                time = intf.get_time(tx)
-            clock = time
+        population_deficit = pop.check(dri, ps)
+        if population_deficit:
+            pop.apply_change(dri, population_deficit)
+        time = intf.get_time(dri)
+        while clock == time:
+            time = intf.get_time(dri)
+        clock = time
         dri.close()
     print("Population closed")
