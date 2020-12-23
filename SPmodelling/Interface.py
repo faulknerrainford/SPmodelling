@@ -177,7 +177,7 @@ def agent_contacts(dri, node_a, contact_label=None):
     """
     Returns outgoing contact edges from a node
 
-    :param dri: neo4j driver
+    :param dri: neo4j database driver
     :param node_a: source node id tuple
     :param contact_label: type of out going relationship
 

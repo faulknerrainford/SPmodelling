@@ -6,24 +6,43 @@ import SPmodelling.Interface as intf
 class Intervenor(ABC):
 
     def __init__(self, name):
+        """
+        Assign name of intervenor to help track activity and report when its finished
+
+        :param name: name of intervenor used for print statements to track activity of different intervenors
+        """
         self.name = name
         pass
 
     @abstractmethod
-    def check(self, dri):
+    def check(self, dri, params=None):
+        """
+        Method for checking if changes need to be made to the system
+
+        :param dri: neo4j database driver
+        :param params: any further parameters the intervenor might need
+
+        :return: None
+        """
         pass
 
     @abstractmethod
-    def apply_change(self, dri):
+    def apply_change(self, dri, params=None):
+        """
+        Method for applying changes to system
+
+        :param dri: neo4j driver
+        :param params: any further parameters the intervenor might need
+
+        :return: None
+        """
         pass
 
     def main(self):
         """
         default intervenor run set up for subclasses to use.
 
-        :param dri:
-        :param length:
-        :return:
+        :return:None
         """
         import specification
         clock = 0

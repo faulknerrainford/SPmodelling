@@ -65,6 +65,11 @@ class MobileAgent(ABC):
 
     @abstractmethod
     def __init__(self, agentid, params=None, nuid="id"):
+        """
+        :param agentid: integer agent id value
+        :param params: the dictionary of key value pairs to be set as parameters of the agent
+        :param nuid: the name of the unique id field, defaults to "id" indicating an integer numerical id
+        """
         self.id = agentid
         self.view = None
         self.params = params
@@ -138,6 +143,13 @@ class MobileAgent(ABC):
         return None
 
     def move_services(self, dri):
+        """
+        Checks for the existence of services available to the agent
+
+        :param tx: neo4j database read or write transaction
+
+        :return: List of available services or None if no services available
+        """
         import specification
         node_class = specification.NodeClasses[self.choice.end_node["name"]]
         node = node_class(self.choice.end_node["name"])
@@ -175,6 +187,11 @@ class CommunicativeAgent(ABC):
 
     @abstractmethod
     def __init__(self, agentid, params=None, nuid="id"):
+        """
+        :param agentid: integer agent id value
+        :param params: the dictionary of key value pairs to be set as parameters of the agent
+        :param nuid: the name of the unique id field, defaults to "id" indicating an integer numerical id
+        """
         self.id = agentid
         self.view = None
         self.params = params

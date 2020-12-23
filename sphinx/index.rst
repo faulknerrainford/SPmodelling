@@ -12,6 +12,9 @@ The Socio-Physical Modelling framework.
    :caption: Contents:
 
    summary
+   setup
+   metamodel
+   platformmodel
    code
    interface
 

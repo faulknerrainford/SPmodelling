@@ -9,6 +9,12 @@ class Reset(ABC):
     """
 
     def __init__(self, reset_tag):
+        """
+        Set up reset run
+
+        :param reset_tag: label for the reset script defining the starting conditions of the model, used as part of the
+                          run tag
+        """
         self.reset_name = reset_tag      
 
     def set_output(self, dri, run_number, pop_size, run_length):
